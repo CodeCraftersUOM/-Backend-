@@ -1,0 +1,17 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency lock (optional if using package-lock)
+package-lock.json
