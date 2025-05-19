@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const model = require("./model");
 const mongoose = require("mongoose");
+const authenticationRoute = require('./routes/authenticationRoute')
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -9,8 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const data = [];
 
 // Connect to Mongoose
-mongoose
-  .connect(
+mongoose.connect(
     "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish"
   )
   .then(() => {
@@ -48,6 +48,13 @@ mongoose
   .catch((error) => {
     console.error("Error connecting to MongoDB:", error);
   });
+
+
+  //Web APIs
+  app.use('/api',authenticationRoute)
+   //Web APIs
+
+  
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
