@@ -1,8 +1,15 @@
 const express = require("express");
 const app = express();
+const cors = require("cors"); // ✅ Import cors
 const model = require("./model");
 const mongoose = require("mongoose");
-const authenticationRoute = require('./routes/authenticationRoute')
+const authenticationRoute = require('./routes/authenticationRoute');
+
+// ✅ Use CORS middleware
+app.use(cors({
+  origin: "http://localhost:3000", // 👈 your frontend URL
+  credentials: true               // 👈 allow cookies if needed
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,12 +56,8 @@ mongoose.connect(
     console.error("Error connecting to MongoDB:", error);
   });
 
-
-  //Web APIs
-  app.use('/api',authenticationRoute)
-   //Web APIs
-
-  
+// Web APIs
+app.use('/api', authenticationRoute);
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
