@@ -4,7 +4,7 @@ const cors = require("cors");
 const port = 2000;
 const host = "0.0.0.0";
 const mongoose = require("mongoose");
-const router = require("./routers/router");
+const router = require("./routes/router");
 const controller = require("./controllers/controller");
 
 app.use(cors());

@@ -13,6 +13,6 @@ app.use(
 
 app.use(express.json());
 
-const router = require("./routers/router");
+const router = require("./routes/router");
 
 module.exports = app;
