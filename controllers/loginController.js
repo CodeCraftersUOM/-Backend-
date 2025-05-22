@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET 
 
- // Ideally from process.env.JWT_SECRET
+// Ideally from process.env.JWT_SECRET
 
 // Signup Controller
 const signup = async (req, res) => {
