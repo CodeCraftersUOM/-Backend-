@@ -11,6 +11,10 @@ const resturentRoutes = require('./routes/resturentRoutes')
 const healthRoutes = require('./routes/healthRoutes')
 const houeskeepingRoutes = require('./routes/houeskeepingRoutes')
 const taxiRoutes = require('./routes/taxiRoutes')
+const otherRoutes = require('./routes/otherRoutes')
+
+
+
 // ✅ Use CORS middleware
 app.use(cors({
   origin: "http://localhost:3000", // 👈 your frontend URL
@@ -71,6 +75,10 @@ app.use('/api',resturentRoutes);
 app.use('/api',healthRoutes);
 app.use('/api',houeskeepingRoutes);
 app.use('/api',taxiRoutes);
+app.use('/api',otherRoutes);
+
+
+
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
