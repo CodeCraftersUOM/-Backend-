@@ -7,6 +7,8 @@ const authenticationRoute = require('./routes/authenticationRoute');
 const guideRoutes = require('./routes/guideRoutes')
 const communiRoutes = require('./routes/communiRoutes')
 const repairRoutes = require('./routes/repairRoutes')
+const resturentRoutes = require('./routes/resturentRoutes')
+const healthRoutes = require('./routes/healthRoutes')
 
 // ✅ Use CORS middleware
 app.use(cors({
@@ -64,6 +66,8 @@ app.use('/api', authenticationRoute);
 app.use('/api',guideRoutes);
 app.use('/api',communiRoutes);
 app.use('/api',repairRoutes);
+app.use('/api',resturentRoutes);
+app.use('/api',healthRoutes);
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
