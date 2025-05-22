@@ -9,6 +9,7 @@ const communiRoutes = require('./routes/communiRoutes')
 const repairRoutes = require('./routes/repairRoutes')
 const resturentRoutes = require('./routes/resturentRoutes')
 const healthRoutes = require('./routes/healthRoutes')
+const houeskeepingRoutes = require('./routes/houeskeepingRoutes')
 
 // ✅ Use CORS middleware
 app.use(cors({
@@ -68,6 +69,7 @@ app.use('/api',communiRoutes);
 app.use('/api',repairRoutes);
 app.use('/api',resturentRoutes);
 app.use('/api',healthRoutes);
+app.use('/api',houeskeepingRoutes);
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
