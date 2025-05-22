@@ -5,6 +5,7 @@ const model = require("./model");
 const mongoose = require("mongoose");
 const authenticationRoute = require('./routes/authenticationRoute');
 const guideRoutes = require('./routes/guideRoutes')
+const communiRoutes = require('./routes/communiRoutes')
 
 // ✅ Use CORS middleware
 app.use(cors({
@@ -59,7 +60,8 @@ mongoose.connect(
 
 // Web APIs
 app.use('/api', authenticationRoute);
-app.use('/api',guideRoutes)
+app.use('/api',guideRoutes);
+app.use('/api',communiRoutes);
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
