@@ -1,31 +1,47 @@
-const User = require('../models/authModel');
+const User = require('../models/authModel'); // assuming your model file is named authModel.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-
-const JWT_SECRET = process.env.JWT_SECRET 
-
-// Ideally from process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Signup Controller
 const signup = async (req, res) => {
-  const { username, email, password } = req.body;
+  
+  const { username, email, password, fullName, dateOfBirth, gender } = req.body;
 
-  if (!username || !email || !password) {
+  if (!username || !email || !password || !fullName || !dateOfBirth || !gender) {
     return res.status(400).json({ message: "All fields are required" });
   }
-
+  
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(409).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ username, email, password: hashedPassword });
+
+    
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      fullName,
+      dateOfBirth:new Date(dateOfBirth),
+      gender:gender.toLowerCase(),
+      
+    });
+    console.log(fullName,dateOfBirth,gender)
+    console.log(newUser)
+    
 
     res.status(201).json({
       message: "Signup successful",
-      user: { username: newUser.username, email: newUser.email }
+      user: {
+        username: newUser.username,
+        email: newUser.email,
+        fullName: newUser.fullName,
+        gender: newUser.gender
+      }
     });
   } catch (err) {
     console.error("Signup Error:", err);
@@ -58,14 +74,19 @@ const login = async (req, res) => {
     // Set token in HttpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // use true in production (HTTPS)
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
       sameSite: 'strict'
     });
 
     res.status(200).json({
       message: "Login successful",
-      user: { username: user.username, email: user.email }
+      user: {
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        gender: user.gender
+      }
     });
 
   } catch (err) {
@@ -73,4 +94,5 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 module.exports = { signup, login };
