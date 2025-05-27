@@ -12,6 +12,8 @@ const healthRoutes = require('./routes/healthRoutes')
 const houeskeepingRoutes = require('./routes/houeskeepingRoutes')
 const taxiRoutes = require('./routes/taxiRoutes')
 const otherRoutes = require('./routes/otherRoutes')
+const dashboardRoutes = require('./routes/dashbordRoutes')
+const cookieParser = require('cookie-parser');
 
 
 
@@ -23,6 +25,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // ✅ Enables req.cookies
 
 const data = [];
 
@@ -76,6 +79,7 @@ app.use('/api',healthRoutes);
 app.use('/api',houeskeepingRoutes);
 app.use('/api',taxiRoutes);
 app.use('/api',otherRoutes);
+app.use('/api',dashboardRoutes)
 
 
 
