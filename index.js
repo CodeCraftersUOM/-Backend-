@@ -4,6 +4,7 @@ const cors = require("cors");
 const model = require("./model");
 const mongoose = require("mongoose");
 const authenticationRoute = require('./routes/authenticationRoute');
+<<<<<<< HEAD
 const guideRoutes = require('./routes/guideRoutes');
 const communiRoutes = require('./routes/communiRoutes');
 const repairRoutes = require('./routes/repairRoutes');
@@ -14,6 +15,19 @@ const taxiRoutes = require('./routes/taxiRoutes');
 const otherRoutes = require('./routes/otherRoutes');
 const dashboardRoutes = require('./routes/dashbordRoutes');
 const cookieParser = require('cookie-parser');
+=======
+const guideRoutes = require('./routes/guideRoutes')
+const communiRoutes = require('./routes/communiRoutes')
+const repairRoutes = require('./routes/repairRoutes')
+const resturentRoutes = require('./routes/resturentRoutes')
+const healthRoutes = require('./routes/healthRoutes')
+const houeskeepingRoutes = require('./routes/houeskeepingRoutes')
+const taxiRoutes = require('./routes/taxiRoutes')
+const otherRoutes = require('./routes/otherRoutes')
+const dashboardRoutes = require('./routes/dashbordRoutes')
+const cookieParser = require('cookie-parser')
+const carddRoutes = require('./routes/cardRoutes')
+>>>>>>> 59eabdab0626ef37a51166f6710b63ea44c397c6
 
 // ✅ Use CORS middleware
 app.use(cors({
@@ -69,6 +83,7 @@ mongoose.connect(
 
 // Web APIs
 app.use('/api', authenticationRoute);
+<<<<<<< HEAD
 app.use('/api', guideRoutes);
 app.use('/api', communiRoutes);
 app.use('/api', repairRoutes);
@@ -78,6 +93,19 @@ app.use('/api', houeskeepingRoutes);
 app.use('/api', taxiRoutes);
 app.use('/api', otherRoutes);
 app.use('/api', dashboardRoutes);
+=======
+app.use('/api',guideRoutes);
+app.use('/api',communiRoutes);
+app.use('/api',repairRoutes);
+app.use('/api',resturentRoutes);
+app.use('/api',healthRoutes);
+app.use('/api',houeskeepingRoutes);
+app.use('/api',taxiRoutes);
+app.use('/api',otherRoutes);
+app.use('/api',dashboardRoutes)
+app.use('/api',carddRoutes)
+
+>>>>>>> 59eabdab0626ef37a51166f6710b63ea44c397c6
 
 
 app.listen(2000, () => {
