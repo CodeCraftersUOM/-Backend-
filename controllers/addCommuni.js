@@ -14,7 +14,7 @@ const createCommunicationService = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: savedService
+      data: savedService,
     });
   } catch (error) {
     // Handle duplicate key errors (if any field is marked unique in the schema)
