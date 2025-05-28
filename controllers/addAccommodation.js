@@ -50,4 +50,21 @@ const createAccommodationService = async (req, res) => {
   }
 };
 
-module.exports = { createAccommodationService };
+// Get all accommodations
+const getAccommodation = async (req, res) => {
+  try {
+    const accommodations = await AccommodationService.find();
+    res.status(200).json({
+      success: true,
+      data: accommodations,
+    });
+  } catch (error) {
+    console.error("Error fetching accommodations:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
+  }
+};
+
+module.exports = { createAccommodationService, getAccommodation };
