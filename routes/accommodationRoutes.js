@@ -1,14 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const createAccommodation = require("../controllers/addAccommodation");
-const { getAccommodation } = require("../controllers/addAccommodation");
+const {
+  createAccommodationService,
+  getAccommodation,
+} = require("../controllers/addAccommodation");
 
-router.post(
-  "/addAccommodation",
-  createAccommodation.createAccommodationService
-);
-
-// Define the GET route
+router.post("/addAccommodation", createAccommodationService);
 router.get("/getAccommodation", getAccommodation);
 
 module.exports = router;

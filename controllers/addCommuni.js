@@ -1,4 +1,4 @@
-const CommunicationService = require('../models/communicationModel');
+const CommunicationService = require("../models/communiModel");
 
 const createCommunicationService = async (req, res) => {
   try {
@@ -6,7 +6,7 @@ const createCommunicationService = async (req, res) => {
 
     // Create new communication service document
     const newService = new CommunicationService({
-      ...serviceData
+      ...serviceData,
     });
 
     // Save to the database
@@ -14,7 +14,7 @@ const createCommunicationService = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: savedService
+      data: savedService,
     });
   } catch (error) {
     // Handle duplicate key errors (if any field is marked unique in the schema)
@@ -22,15 +22,15 @@ const createCommunicationService = async (req, res) => {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(400).json({
         success: false,
-        error: `${field} already exists`
+        error: `${field} already exists`,
       });
     }
 
     // Handle other errors
-    console.error('Error creating communication service:', error);
+    console.error("Error creating communication service:", error);
     res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: "Server error",
     });
   }
 };

@@ -67,4 +67,14 @@ const getAccommodation = async (req, res) => {
   }
 };
 
-module.exports = { createAccommodationService, getAccommodation };
+// Define addAccommodation as a local function
+const addAccommodation = async (req, res) => {
+  // Your logic to add accommodation
+  res.status(201).json({ message: "Accommodation added!" });
+};
+
+module.exports = {
+  createAccommodationService,
+  getAccommodation,
+  addAccommodation,
+};
