@@ -9,7 +9,7 @@ const createCommunicationService = async (req, res) => {
       ...serviceData
     });
 
-    // Save to database
+    // Save to the database
     const savedService = await newService.save();
 
     res.status(201).json({

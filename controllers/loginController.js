@@ -1,9 +1,10 @@
-const User = require('../models/authModel'); // assuming your model file is named authModel.js
+const User = require('../models/userModel'); // assuming your model file is named authModel.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
+
 
 // Signup Controller
 const signup = async (req, res) => {
@@ -51,6 +52,7 @@ const signup = async (req, res) => {
 
 // Login Controller
 const login = async (req, res) => {
+  
   const { email, password } = req.body;
 
   if (!email || !password)
@@ -70,6 +72,7 @@ const login = async (req, res) => {
       JWT_SECRET,
       { expiresIn: '1d' }
     );
+    
 
     // Set token in HttpOnly cookie
     res.cookie('token', token, {

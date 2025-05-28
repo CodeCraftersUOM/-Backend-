@@ -5,7 +5,6 @@ if (mongoose.models.User) {
   delete mongoose.models.User;
 }
 
-
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
