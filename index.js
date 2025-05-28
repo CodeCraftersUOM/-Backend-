@@ -13,7 +13,8 @@ const houeskeepingRoutes = require('./routes/houeskeepingRoutes')
 const taxiRoutes = require('./routes/taxiRoutes')
 const otherRoutes = require('./routes/otherRoutes')
 const dashboardRoutes = require('./routes/dashbordRoutes')
-const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser')
+const carddRoutes = require('./routes/cardRoutes')
 
 
 
@@ -80,7 +81,7 @@ app.use('/api',houeskeepingRoutes);
 app.use('/api',taxiRoutes);
 app.use('/api',otherRoutes);
 app.use('/api',dashboardRoutes)
-
+app.use('/api',carddRoutes)
 
 
 
