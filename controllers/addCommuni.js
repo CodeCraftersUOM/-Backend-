@@ -5,10 +5,25 @@ const createCommunicationService = async (req, res) => {
   try {
     const serviceData = req.body;
     
-    // Create new communication service document
-    const newService = new CommunicationService({
-      ...serviceData
+    // Check if communication service with same email or business registration already exists
+    const existingService = await CommunicationService.findOne({
+      $or: [
+        { emailAddress: serviceData.emailAddress },
+        { businessRegistration: serviceData.businessRegistration }
+      ]
     });
+    
+    if (existingService) {
+      const duplicateField = existingService.emailAddress === serviceData.emailAddress ? 'email' : 'business registration';
+      return res.status(409).json({
+        success: false,
+        message: `Communication service with this ${duplicateField} already exists`,
+        duplicateField: duplicateField
+      });
+    }
+    
+    // Create new communication service document
+    const newService = new CommunicationService(serviceData);
     
     // Save to database
     const savedService = await newService.save();
@@ -67,6 +82,31 @@ const updateCommunicationService = async (req, res) => {
         success: false,
         message: 'Communication service not found'
       });
+    }
+    
+    // Check for duplicate email or business registration if they're being updated
+    if (updateData.emailAddress || updateData.businessRegistration) {
+      const duplicateQuery = {
+        _id: { $ne: id }, // Exclude current service
+        $or: []
+      };
+      
+      if (updateData.emailAddress) {
+        duplicateQuery.$or.push({ emailAddress: updateData.emailAddress });
+      }
+      if (updateData.businessRegistration) {
+        duplicateQuery.$or.push({ businessRegistration: updateData.businessRegistration });
+      }
+      
+      const duplicateService = await CommunicationService.findOne(duplicateQuery);
+      if (duplicateService) {
+        const duplicateField = duplicateService.emailAddress === updateData.emailAddress ? 'email' : 'business registration';
+        return res.status(409).json({
+          success: false,
+          message: `Communication service with this ${duplicateField} already exists`,
+          duplicateField: duplicateField
+        });
+      }
     }
     
     // Update service
@@ -150,9 +190,7 @@ const getAllCommunicationServices = async (req, res) => {
       limit = 10, 
       serviceType, 
       paymentMethod, 
-      coverageArea,
-      minSpeed,
-      maxSpeed 
+      coverageArea
     } = req.query;
     
     // Build filter object
@@ -168,15 +206,6 @@ const getAllCommunicationServices = async (req, res) => {
     
     if (coverageArea) {
       filter.serviceCoverageArea = { $in: [coverageArea] };
-    }
-    
-    // Speed filtering (basic implementation)
-    if (minSpeed || maxSpeed) {
-      // This is a simplified speed filter - you might want to enhance this
-      const speedFilter = {};
-      if (minSpeed) {
-        filter.serviceSpeed = { $regex: new RegExp(minSpeed, 'i') };
-      }
     }
     
     // Calculate pagination

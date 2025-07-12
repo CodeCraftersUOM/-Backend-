@@ -1,13 +1,41 @@
 const mongoose = require('mongoose');
 
 const communicationServiceSchema = new mongoose.Schema({
-  serviceTypesOffered: {
-    type: [String],
+  // Company Information
+  companyName: {
+    type: String,
     required: true,
     trim: true,
   },
-  serviceSpeed: {
+  contactPerson: {
     type: String,
+    required: true,
+    trim: true,
+  },
+  phoneNumber: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  emailAddress: {
+    type: String,
+    required: true,
+    lowercase: true,
+    trim: true,
+  },
+  businessRegistration: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  yearsInBusiness: {
+    type: Number,
+    default: 0,
+  },
+  
+  // Service Details
+  serviceTypesOffered: {
+    type: [String],
     required: true,
     trim: true,
   },
@@ -16,18 +44,21 @@ const communicationServiceSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  pricingDetails: {
+  specialFeatures: {
     type: String,
     required: true,
     trim: true,
   },
+  
+  // Business Terms
   paymentMethods: {
     type: [String],
     required: true,
-    enum: ['Cash', 'Credit Card', 'Debit Card', 'Bank Transfer', 'Online Payment', 'Mobile Payment'], // add more as needed
+    enum: ['Cash', 'Credit Card', 'Debit Card', 'Bank Transfer', 'Online Payment', 'Mobile Payment'],
   },
   currentPromotions: {
     type: String,
+    required: true,
     trim: true,
   }
 }, { timestamps: true });
