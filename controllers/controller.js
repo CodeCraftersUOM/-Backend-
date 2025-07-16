@@ -23,7 +23,9 @@ const addUser = async (req, res) => {
     });
 
     const savedUser = await user.save();
-    res.status(200).json({ message: "User created", user: savedUser });
+    res
+      .status(200)
+      .json({ message: "User created", user: savedUser, test: "test" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -58,19 +60,26 @@ const SECRET_KEY = "yoursecretkey"; // Use .env file in real apps
 const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
-
     const user = await User.findOne({ username });
+    console.log("User found:", user); // Debug
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match:", isMatch); // Debug
+
     if (!isMatch)
       return res
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, email: user.email }, SECRET_KEY, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      SECRET_KEY,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     res.status(200).json({
       success: true,
