@@ -1,7 +1,10 @@
-const express = require('express')
-const router = express.Router()
-const  createCard =require('../controllers/addcard');
+const express = require("express");
+const router = express.Router();
 
-router.post('/addcard',createCard.createCardDetail);
+// Example POST endpoint for card details
+router.post("/createCardDetail", async (req, res) => {
+  // TODO: Save card details to DB (add validation and security!)
+  res.status(200).json({ message: "Card details received" });
+});
 
 module.exports = router;

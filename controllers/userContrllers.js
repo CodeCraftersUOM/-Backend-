@@ -1,4 +1,5 @@
 const User = require('../models/userModel'); // Adjust path as needed
+const { sendWelcomeEmail } = require('../utils/email');
 
 // Get all users for dashboard
 const getAllUsers = async (req, res) => {
@@ -109,6 +110,13 @@ const createUser = async (req, res) => {
     
     const savedUser = await newUser.save();
     
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(savedUser.email, savedUser.fullName || savedUser.username);
+    } catch (emailErr) {
+      // Optionally log or handle email sending error
+      console.error('Failed to send welcome email:', emailErr);
+    }
     res.status(201).json({
       success: true,
       message: 'User created successfully',

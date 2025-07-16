@@ -13,6 +13,7 @@ const houeskeepingRoutes = require("./routes/houeskeepingRoutes");
 const taxiRoutes = require("./routes/taxiRoutes");
 const otherRoutes = require("./routes/otherRoutes");
 const accommodationRoutes = require("./routes/accommodationRoutes");
+const cardRoutes = require("./routes/cardRoutes");
 const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
 
 // ✅ Use CORS middleware
@@ -81,6 +82,7 @@ app.use("/api", houeskeepingRoutes);
 app.use("/api", taxiRoutes);
 app.use("/api", otherRoutes);
 app.use("/api", accommodationRoutes);
+app.use("/api", cardRoutes);
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");

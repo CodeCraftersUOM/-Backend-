@@ -1,4 +1,4 @@
-const CardDetail = require('../models/cardModel');
+const CardDetail = require("../models/cardModel");
 
 const createCardDetail = async (req, res) => {
   try {
@@ -6,7 +6,7 @@ const createCardDetail = async (req, res) => {
 
     // Create new card detail document
     const newCard = new CardDetail({
-      ...cardData
+      ...cardData,
     });
 
     // Save to database
@@ -14,22 +14,23 @@ const createCardDetail = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: savedCard
+      data: savedCard,
     });
   } catch (error) {
     // Handle duplicate card number
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        error: 'Card number already exists'
+        error: "Card number already exists",
       });
     }
 
     // Handle other errors
-    console.error('Error creating card detail:', error);
+    console.error("Error creating card detail:", error);
     res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: "Server error",
+      message: error.message, // Add this line for debugging
     });
   }
 };
