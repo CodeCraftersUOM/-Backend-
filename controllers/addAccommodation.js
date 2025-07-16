@@ -78,7 +78,7 @@ const getAccommodationById = async (req, res) => {
     }
 
     // Add this log to inspect the data before sending
-    console.log("Accommodation data fetched by ID:", accommodation);
+    console.log("Accommodation data fetched by ID");
 
     res.status(200).json({
       success: true,
