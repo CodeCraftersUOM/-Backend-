@@ -1,7 +1,8 @@
+require('dotenv').config();
 const User = require('../models/userModel'); // assuming your model file is named authModel.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
