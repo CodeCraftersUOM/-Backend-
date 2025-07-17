@@ -24,10 +24,10 @@ const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
 // ✅ Use CORS middleware
 app.use(
   cors({
-    origin: '*',
+    origin: ['http://localhost:3000','http://localhost:64592'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false // 👈 allow cookies if needed
+    credentials: true // 👈 allow cookies if needed
 
   })
 );
