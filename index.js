@@ -16,6 +16,8 @@ const accommodationRoutes = require("./routes/accommodationRoutes");
 const cardRoutes = require("./routes/cardRoutes");
 const buythingsRoute = require("./routes/buythingsRoute");
 const adventuresRoute = require("./routes/adventuresRoute");
+const reviewsRoute = require("./routes/reviewsRoute");
+const placestovisitRoutes = require("./routes/placestovisitRoutes");
 const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
 
 
@@ -91,6 +93,8 @@ app.use("/api", accommodationRoutes);
 app.use("/api", cardRoutes);
 app.use("/api", buythingsRoute);
 app.use("/api", adventuresRoute);
+app.use("/api", reviewsRoute);
+app.use("/api", placestovisitRoutes);
 
 
 app.listen(2000, () => {
