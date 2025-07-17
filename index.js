@@ -14,13 +14,21 @@ const taxiRoutes = require("./routes/taxiRoutes");
 const otherRoutes = require("./routes/otherRoutes");
 const accommodationRoutes = require("./routes/accommodationRoutes");
 const cardRoutes = require("./routes/cardRoutes");
+const buythingsRoute = require("./routes/buythingsRoute");
+const adventuresRoute = require("./routes/adventuresRoute");
+const reviewsRoute = require("./routes/reviewsRoute");
+const placestovisitRoutes = require("./routes/placestovisitRoutes");
 const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
+
 
 // ✅ Use CORS middleware
 app.use(
   cors({
-    origin: "http://localhost:3000", // 👈 your frontend URL
-    credentials: true, // 👈 allow cookies if needed
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false // 👈 allow cookies if needed
+
   })
 );
 
@@ -83,6 +91,11 @@ app.use("/api", taxiRoutes);
 app.use("/api", otherRoutes);
 app.use("/api", accommodationRoutes);
 app.use("/api", cardRoutes);
+app.use("/api", buythingsRoute);
+app.use("/api", adventuresRoute);
+app.use("/api", reviewsRoute);
+app.use("/api", placestovisitRoutes);
+
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
