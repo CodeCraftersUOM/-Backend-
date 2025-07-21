@@ -14,13 +14,15 @@ const createBuythings = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating item:", error);
-    res.status(500).json({
+    res.status(501).json({
       success: false,
       message: "Failed to create item",
       error: error.message,
     });
   }
 };
+
+
 
 // @desc    Get all items
 // @route   GET /api/items
@@ -34,7 +36,7 @@ const getAllBuythings = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching items:", error);
-    res.status(500).json({
+    res.status(502).json({
       success: false,
       message: "Failed to fetch items",
       error: error.message,
@@ -60,7 +62,7 @@ const getItemById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching item:", error);
-    res.status(500).json({
+    res.status(503).json({
       success: false,
       message: "Failed to fetch item",
       error: error.message,

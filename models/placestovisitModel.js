@@ -2,13 +2,7 @@ const mongoose = require("mongoose");
 
 const placestovisitSchema = new mongoose.Schema(
   {
-    id: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    title: {
+   title: {
       type: String,
       required: true,
       trim: true,
@@ -18,20 +12,23 @@ const placestovisitSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    subcategory: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    imageUrl: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    
+    images: [
+  {
+    url: String,
+    publicId: String,
+    originalName: String,
+    uploadedAt: { type: Date, default: Date.now },
+  },
+],
+   
     description: {
       type: String,
       trim: true,
     },
+    time: {
+      type: String},
+
     googleMapsUrl: {
       type: String,
       trim: true,
@@ -91,17 +88,10 @@ const placestovisitSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    hour: {
-      type: Number,
-      min: 0,
-    },
-    min: {
-      type: Number,
-      min: 0,
-    },
+   
   },
   { timestamps: true }
 );
 
 module.exports =
-  mongoose.models.Placestovisit || mongoose.model("Placestovisit", placestovisitSchema, 'things_to_do');
+  mongoose.models.Placestovisit || mongoose.model("Placestovisit", placestovisitSchema);

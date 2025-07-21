@@ -8,8 +8,10 @@ const {
   deleteBuythings,
 } = require("../controllers/addBuythings");
 
+const { uploadImages, handleUploadError } = require("../middleware/imageUpload");
+
 // Create a new buythings item
-router.post("/buythings", createBuythings);
+router.post("/buythings", uploadImages, createBuythings);
 
 // Get all buythings
 router.get("/buythings", getAllBuythings);
@@ -19,6 +21,8 @@ router.get("/buythings/:id", getItemById);
 
 // Update buythings by ID
 router.put("/buythings/:id", updateBuythings);
+
+router.use(handleUploadError);
 
 // Delete buythings by ID
 router.delete("/buythings/:id", deleteBuythings);

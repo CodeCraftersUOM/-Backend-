@@ -2,32 +2,23 @@ const mongoose = require("mongoose");
 
 const adventuresSchema = new mongoose.Schema(
   {
-    id: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
+    
     title: {
       type: String,
       required: true,
       trim: true,
     },
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    subcategory: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    imageUrl: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    category: { type: String, required: true },
+    
+    images: [
+  {
+    url: String,
+    publicId: String,
+    originalName: String,
+    uploadedAt: { type: Date, default: Date.now },
+  },
+],
+
     description: {
       type: String,
       trim: true,
@@ -75,6 +66,6 @@ const adventuresSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+
 // Export model
-module.exports =
-  mongoose.models.Item || mongoose.model("Item", adventuresSchema, 'things_to_do');
+module.exports = mongoose.models.Adventures || mongoose.model("Adventures", adventuresSchema);
