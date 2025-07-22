@@ -10,6 +10,10 @@ const specialEventSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please add a category"],
     },
+    location:{
+      type: String,
+      required: [true, "Please add a location"],
+    },
     
     
     images: [
@@ -29,7 +33,7 @@ const specialEventSchema = new mongoose.Schema(
       required: [true, "Please provide a Google Maps URL"],
     },
     date: {
-      type: Date,
+      type: String,
       required: [true, "Please provide a date for the event"],
     },
     contactno: {

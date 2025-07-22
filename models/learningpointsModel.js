@@ -40,14 +40,9 @@ const learningPointSchema = new mongoose.Schema(
     avgprice: {
       type: String,
     },
-    tourname: {
-      type: Object,
-      default: {},
-    },
-    price: {
-      type: Object,
-      default: {},
-    },
+    
+    
+    
     websiteUrl: {
       type: String,
     },

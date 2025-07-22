@@ -62,6 +62,10 @@ const adventuresSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    address: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );

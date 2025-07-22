@@ -26,9 +26,6 @@ const placestovisitSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    time: {
-      type: String},
-
     googleMapsUrl: {
       type: String,
       trim: true,
@@ -50,7 +47,7 @@ const placestovisitSchema = new mongoose.Schema(
       trim: true,
     },
     bestTimetoVisit: {
-      type: Date,
+      type: String,
     },
     activities: {
       type: String,
@@ -68,10 +65,7 @@ const placestovisitSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    contactno: {
-      type: String,
-      trim: true,
-    },
+    
     address: {
       type: String,
       trim: true,

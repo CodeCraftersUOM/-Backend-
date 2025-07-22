@@ -23,22 +23,35 @@ const learningpointsRoutes = require("./routes/learningpointsRoutes");
 const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
 
 mongoose.connection.once('open', async () => {
-  try {
-    const result = await mongoose.connection.db.collection('things_to_do').dropIndex('id_1');
-    console.log('✅ Dropped index:', result);
-  } catch (err) {
-    if (err.codeName === 'IndexNotFound') {
-      console.log('ℹ️ Index "id_1" not found, nothing to drop.');
-    } else {
-      console.error('❌ Error dropping index:', err);
+  const collections = [
+    'things_to_do',
+    'specialevents',
+    'learningpoints',
+    'buythings',
+    'adventures'
+  ];
+
+  for (const collectionName of collections) {
+    try {
+      const result = await mongoose.connection.db
+        .collection(collectionName)
+        .dropIndex('id_1');
+      console.log(`✅ Dropped index "id_1" from "${collectionName}":`, result);
+    } catch (err) {
+      if (err.codeName === 'IndexNotFound') {
+        console.log(`ℹ️ Index "id_1" not found in "${collectionName}", nothing to drop.`);
+      } else {
+        console.error(`❌ Error dropping index from "${collectionName}":`, err);
+      }
     }
   }
 });
 
+
 // ✅ Use CORS middleware
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:61295', 'http://localhost:3001'], // 👈 allow these origins
+    origin: ['http://localhost:3000', 'http://localhost:63047', 'http://localhost:3001'], // 👈 allow these origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true // 👈 allow cookies if needed
