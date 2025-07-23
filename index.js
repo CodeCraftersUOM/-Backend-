@@ -14,14 +14,52 @@ const taxiRoutes = require("./routes/taxiRoutes");
 const otherRoutes = require("./routes/otherRoutes");
 const accommodationRoutes = require("./routes/accommodationRoutes");
 const cardRoutes = require("./routes/cardRoutes");
+
+const buythingsRoute = require("./routes/buythingsRoute");
+const adventuresRoute = require("./routes/adventuresRoute");
+const reviewsRoute = require("./routes/reviewsRoute");
+const placestovisitRoutes = require("./routes/placestovisitRoutes");
+const specialeventsRoutes = require("./routes/specialeventsRoutes");
+const learningpointsRoutes = require("./routes/learningpointsRoutes");
+
 const bookingRoutes = require("./routes/bookingRoutes");
+
 const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
+
+mongoose.connection.once('open', async () => {
+  const collections = [
+    'things_to_do',
+    'specialevents',
+    'learningpoints',
+    'buythings',
+    'adventures'
+  ];
+
+  for (const collectionName of collections) {
+    try {
+      const result = await mongoose.connection.db
+        .collection(collectionName)
+        .dropIndex('id_1');
+      console.log(`✅ Dropped index "id_1" from "${collectionName}":`, result);
+    } catch (err) {
+      if (err.codeName === 'IndexNotFound') {
+        console.log(`ℹ️ Index "id_1" not found in "${collectionName}", nothing to drop.`);
+      } else {
+        console.error(`❌ Error dropping index from "${collectionName}":`, err);
+      }
+    }
+  }
+});
+
 
 // ✅ Use CORS middleware
 app.use(
   cors({
-    origin: "http://localhost:3000", // 👈 your frontend URL
-    credentials: true, // 👈 allow cookies if needed
+    origin: ['http://localhost:3000', 'http://localhost:59236', 'http://localhost:3001'], // 👈 allow these origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true // 👈 allow cookies if needed
+
   })
 );
 
@@ -30,6 +68,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const data = [];
+
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
 // Connect to Mongoose
 mongoose
@@ -84,7 +125,15 @@ app.use("/api", taxiRoutes);
 app.use("/api", otherRoutes);
 app.use("/api", accommodationRoutes);
 app.use("/api", cardRoutes);
+app.use("/api", buythingsRoute);
+app.use("/api", adventuresRoute);
+app.use("/api", reviewsRoute);
+app.use("/api", placestovisitRoutes);
+app.use("/api", specialeventsRoutes);
+app.use("/api", learningpointsRoutes);
+
 app.use("/api", bookingRoutes);
+
 
 app.listen(2000, () => {
   console.log("Server is running on port 2000");
