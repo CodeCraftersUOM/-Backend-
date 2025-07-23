@@ -1,7 +1,8 @@
+require('dotenv').config();
 const User = require('../models/userModel'); // assuming your model file is named authModel.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -83,7 +84,7 @@ const login = async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000   ,
       sameSite: 'strict'
     });
 
