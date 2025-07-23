@@ -1,15 +1,14 @@
-// models/bookingModel.js (Create this new file)
+// models/bookingModel.js (Add customerUserId)
 const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema(
   {
     accommodationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "AccommodationService", // Reference to your AccommodationService model
+      ref: "AccommodationService",
       required: true,
     },
     accommodationName: {
-      // Storing name directly for simplicity
       type: String,
       required: true,
     },
@@ -20,6 +19,12 @@ const bookingSchema = new mongoose.Schema(
     customerName: {
       type: String,
       required: true,
+    },
+    customerUserId: {
+      // Add this field to link to the user
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Assuming your user model is named 'User'
+      // required: true, // Make it required if every booking must have a user
     },
     checkInDate: {
       type: Date,
@@ -55,7 +60,6 @@ const bookingSchema = new mongoose.Schema(
       enum: ["pending", "confirmed", "rejected", "cancelled", "completed"],
       default: "pending",
     },
-    // Add more fields as needed, e.g., paymentStatus, serviceProviderNotes
   },
   { timestamps: true }
 );

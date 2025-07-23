@@ -1,93 +1,51 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
-const model = require("./model");
 const mongoose = require("mongoose");
-const authenticationRoute = require("./routes/authenticationRoute");
-const guideRoutes = require("./routes/guideRoutes");
-const communiRoutes = require("./routes/communiRoutes");
-const repairRoutes = require("./routes/repairRoutes");
-const resturentRoutes = require("./routes/resturentRoutes");
-const healthRoutes = require("./routes/healthRoutes");
-const houeskeepingRoutes = require("./routes/houeskeepingRoutes");
-const taxiRoutes = require("./routes/taxiRoutes");
-const otherRoutes = require("./routes/otherRoutes");
-const accommodationRoutes = require("./routes/accommodationRoutes");
-const cardRoutes = require("./routes/cardRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
+const cookieParser = require("cookie-parser");
 
-// ✅ Use CORS middleware
+const app = express();
+
+// Middleware
 app.use(
   cors({
-    origin: "http://localhost:3000", // 👈 your frontend URL
-    credentials: true, // 👈 allow cookies if needed
+    origin: "http://localhost:3000", // Adjust if needed
+    credentials: true,
   })
 );
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const data = [];
-
-// Connect to Mongoose
+// MongoDB Connection
+const uri =
+  "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish";
 mongoose
-  .connect(
-    "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish"
-  )
-  .then(() => {
-    console.log("Connected to MongoDB");
+  .connect(uri)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
-    app.post("/api/add_data", async (req, res) => {
-      console.log("result", req.body);
+// ✅ Routes from your original app.js + server.js
+const loginRouter = require("./routes/router"); // handles login/signup
+app.use("/api", loginRouter);
 
-      let data2 = model(req.body);
-      try {
-        let dataToStore = await data2.save();
-        res.status(200).json(dataToStore);
-      } catch (error) {
-        res.status(400).json({
-          message: "Error saving data",
-          error: error.message,
-        });
-      }
-    });
+// ✅ Additional routes from original index.js
+app.use("/api", require("./routes/authenticationRoute"));
+app.use("/api", require("./routes/guideRoutes"));
+app.use("/api", require("./routes/communiRoutes"));
+app.use("/api", require("./routes/repairRoutes"));
+app.use("/api", require("./routes/resturentRoutes"));
+app.use("/api", require("./routes/healthRoutes"));
+app.use("/api", require("./routes/houeskeepingRoutes"));
+app.use("/api", require("./routes/taxiRoutes"));
+app.use("/api", require("./routes/otherRoutes"));
+app.use("/api", require("./routes/accommodationRoutes"));
+app.use("/api", require("./routes/cardRoutes"));
+app.use("/api", require("./routes/bookingRoutes"));
+app.use("/api", require("./routes/notificationRoutes"));
+app.use("/api", require("./routes/appNotificationRoutes"));
 
-    app.get("/api/get_data", (req, res) => {
-      if (data.length > 0) {
-        res.status(200).send({
-          status_code: 200,
-          message: data,
-        });
-      } else {
-        res.status(404).send({
-          status_code: 404,
-          message: "No data found",
-        });
-      }
-    });
-  })
-  .catch((error) => {
-    console.error("Error connecting to MongoDB:", error);
-  });
-
-// Web APIs
-app.use("/api", authenticationRoute);
-app.use("/api", guideRoutes);
-app.use("/api", communiRoutes);
-app.use("/api", repairRoutes);
-app.use("/api", resturentRoutes);
-app.use("/api", healthRoutes);
-app.use("/api", houeskeepingRoutes);
-app.use("/api", taxiRoutes);
-app.use("/api", otherRoutes);
-app.use("/api", accommodationRoutes);
-app.use("/api", cardRoutes);
-app.use("/api", bookingRoutes);
-app.use("/api", notificationRoutes);
-
-app.listen(2000, () => {
-  console.log("Server is running on port 2000");
+// Start the server
+const PORT = 2000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
