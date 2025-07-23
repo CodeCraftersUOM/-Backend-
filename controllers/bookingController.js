@@ -1,6 +1,7 @@
 // controllers/bookingController.js (Create this new file)
 const Booking = require("../models/bookingModel");
 const AccommodationService = require("../models/accommodationModel"); // Assuming your accommodation model is named this
+const { sendBookingNotification, sendCustomerNotification } = require("../utils/notifications");
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
@@ -22,6 +23,19 @@ exports.createBooking = async (req, res) => {
 
     const newBooking = new Booking(bookingData);
     const savedBooking = await newBooking.save();
+
+    // 🔔 Send notification to service provider
+    try {
+      const notificationResult = await sendBookingNotification(
+        savedBooking, 
+        accommodation, 
+        'new_booking'
+      );
+      console.log('Notification sent:', notificationResult);
+    } catch (notificationError) {
+      console.error('Failed to send notification:', notificationError);
+      // Don't fail the booking if notification fails
+    }
 
     // In a real system:
     // 1. Notify the service provider (e.g., send an email, push notification, or add to their dashboard)
@@ -86,6 +100,22 @@ exports.updateBookingStatus = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, error: "Booking not found" });
+    }
+
+    // 🔔 Send notification to customer about status update
+    try {
+      let notificationType = 'booking_confirmed';
+      if (status === 'rejected') notificationType = 'booking_rejected';
+      if (status === 'cancelled') notificationType = 'booking_cancelled';
+      
+      const customerNotificationResult = await sendCustomerNotification(
+        booking, 
+        notificationType
+      );
+      console.log('Customer notification sent:', customerNotificationResult);
+    } catch (notificationError) {
+      console.error('Failed to send customer notification:', notificationError);
+      // Don't fail the status update if notification fails
     }
 
     // If confirmed, you might need to manage room availability
