@@ -3,7 +3,7 @@ const router = express.Router();
 
 const {
   createAdventure,
-  getAdventures,
+  getAllAdventures,
   getAdventureById,
   updateAdventure,
   deleteAdventure,
@@ -13,7 +13,7 @@ const {
 router.post("/adventures", createAdventure);
 
 // 📥 Get all adventures
-router.get("/adventures", getAdventures);
+router.get("/adventures", getAllAdventures);
 
 // 🔍 Get a single adventure by ID
 router.get("/adventures/:id", getAdventureById);

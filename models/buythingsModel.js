@@ -25,7 +25,7 @@ const buyThingsSchema = new mongoose.Schema(
     location: { type: String, trim: true },
     googleMapsUrl: { type: String, trim: true },
     openingHours: { type: String, trim: true },
-    contactno: { type: String, trim: true },
+    contactInfo: { type: String, trim: true },
     websiteUrl: { type: String, trim: true },
     entryFee: { type: String, trim: true },
     address: { type: String, trim: true },

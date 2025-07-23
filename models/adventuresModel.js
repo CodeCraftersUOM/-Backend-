@@ -44,7 +44,7 @@ const adventuresSchema = new mongoose.Schema(
       trim: true,
     },
     bestTimetoVisit: {
-      type: Date,
+      type: String,
     },
     activities: {
       type: String,
@@ -62,7 +62,7 @@ const adventuresSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    address: {
+    location: {
       type: String,
       trim: true,
     },

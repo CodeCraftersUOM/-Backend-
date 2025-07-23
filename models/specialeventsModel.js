@@ -36,10 +36,7 @@ const specialEventSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a date for the event"],
     },
-    contactno: {
-      type: String,
-      required: [true, "Please provide a contact number"],
-    },
+    
     bestfor: {
       type: String,
       required: [true, "Please specify who this event is best for"],
@@ -52,7 +49,7 @@ const specialEventSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide the dress code"],
     },
-    parking: {
+    isParking: {
       type: String,
       required: [true, "Please provide parking details"],
     },

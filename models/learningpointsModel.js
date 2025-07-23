@@ -31,7 +31,7 @@ const learningPointSchema = new mongoose.Schema(
     duration: {
       type: String,
     },
-    contactno: {
+    contactInfo: {
       type: String,
     },
     bestfor: {

@@ -51,7 +51,7 @@ mongoose.connection.once('open', async () => {
 // ✅ Use CORS middleware
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:52752', 'http://localhost:3001'], // 👈 allow these origins
+    origin: ['http://localhost:3000', 'http://localhost:59236', 'http://localhost:3001'], // 👈 allow these origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true // 👈 allow cookies if needed
