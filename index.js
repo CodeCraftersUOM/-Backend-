@@ -14,12 +14,16 @@ const taxiRoutes = require("./routes/taxiRoutes");
 const otherRoutes = require("./routes/otherRoutes");
 const accommodationRoutes = require("./routes/accommodationRoutes");
 const cardRoutes = require("./routes/cardRoutes");
+
 const buythingsRoute = require("./routes/buythingsRoute");
 const adventuresRoute = require("./routes/adventuresRoute");
 const reviewsRoute = require("./routes/reviewsRoute");
 const placestovisitRoutes = require("./routes/placestovisitRoutes");
 const specialeventsRoutes = require("./routes/specialeventsRoutes");
 const learningpointsRoutes = require("./routes/learningpointsRoutes");
+
+const bookingRoutes = require("./routes/bookingRoutes");
+
 const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
 
 mongoose.connection.once('open', async () => {
@@ -127,6 +131,8 @@ app.use("/api", reviewsRoute);
 app.use("/api", placestovisitRoutes);
 app.use("/api", specialeventsRoutes);
 app.use("/api", learningpointsRoutes);
+
+app.use("/api", bookingRoutes);
 
 
 app.listen(2000, () => {
