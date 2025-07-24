@@ -16,18 +16,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Content-Type: ${req.get('Content-Type')}`);
+  if (req.method === 'POST') {
+    console.log('Request body:', req.body);
+  }
+  next();
+});
+
 // MongoDB Connection with improved error handling and options
 const uri = "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish";
 
 const connectToMongoDB = async () => {
   try {
     await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      bufferMaxEntries: 0, // Disable mongoose buffering
-      bufferCommands: false, // Disable mongoose buffering
     });
     console.log("✅ Connected to MongoDB Atlas");
   } catch (error) {
@@ -38,8 +43,6 @@ const connectToMongoDB = async () => {
     try {
       const alternativeUri = "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish?retryWrites=true&w=majority";
       await mongoose.connect(alternativeUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
       });

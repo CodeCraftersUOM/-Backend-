@@ -126,6 +126,20 @@ const signup = async (req, res) => {
 
 // Login Controller
 const login = async (req, res) => {
+  // Debug logging
+  console.log('Login request received:');
+  console.log('- Headers:', req.headers);
+  console.log('- Body:', req.body);
+  console.log('- Content-Type:', req.get('Content-Type'));
+  
+  // Check if req.body exists
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({ 
+      message: "Request body is empty or malformed",
+      hint: "Make sure to set Content-Type: application/json and send valid JSON"
+    });
+  }
+
   const { email, password } = req.body;
 
   // Check MongoDB connection status
