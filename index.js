@@ -1,140 +1,109 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
-const model = require("./model");
 const mongoose = require("mongoose");
-const authenticationRoute = require("./routes/authenticationRoute");
-const guideRoutes = require("./routes/guideRoutes");
-const communiRoutes = require("./routes/communiRoutes");
-const repairRoutes = require("./routes/repairRoutes");
-const resturentRoutes = require("./routes/resturentRoutes");
-const healthRoutes = require("./routes/healthRoutes");
-const houeskeepingRoutes = require("./routes/houeskeepingRoutes");
-const taxiRoutes = require("./routes/taxiRoutes");
-const otherRoutes = require("./routes/otherRoutes");
-const accommodationRoutes = require("./routes/accommodationRoutes");
-const cardRoutes = require("./routes/cardRoutes");
+const cookieParser = require("cookie-parser");
 
-const buythingsRoute = require("./routes/buythingsRoute");
-const adventuresRoute = require("./routes/adventuresRoute");
-const reviewsRoute = require("./routes/reviewsRoute");
-const placestovisitRoutes = require("./routes/placestovisitRoutes");
-const specialeventsRoutes = require("./routes/specialeventsRoutes");
-const learningpointsRoutes = require("./routes/learningpointsRoutes");
+const app = express();
 
-const bookingRoutes = require("./routes/bookingRoutes");
-
-const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
-
-mongoose.connection.once('open', async () => {
-  const collections = [
-    'things_to_do',
-    'specialevents',
-    'learningpoints',
-    'buythings',
-    'adventures'
-  ];
-
-  for (const collectionName of collections) {
-    try {
-      const result = await mongoose.connection.db
-        .collection(collectionName)
-        .dropIndex('id_1');
-      console.log(`✅ Dropped index "id_1" from "${collectionName}":`, result);
-    } catch (err) {
-      if (err.codeName === 'IndexNotFound') {
-        console.log(`ℹ️ Index "id_1" not found in "${collectionName}", nothing to drop.`);
-      } else {
-        console.error(`❌ Error dropping index from "${collectionName}":`, err);
-      }
-    }
-  }
-});
-
-
-// ✅ Use CORS middleware
+// Middleware
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:59236', 'http://localhost:3001'], // 👈 allow these origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true // 👈 allow cookies if needed
-
+    origin: "http://localhost:3000", // Adjust if needed
+    credentials: true,
   })
 );
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const data = [];
+// MongoDB Connection with improved error handling and options
+const uri = "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish";
 
-app.use(express.json({ limit: "10mb" }))
-app.use(express.urlencoded({ extended: true, limit: "10mb" }))
-
-// Connect to Mongoose
-mongoose
-  .connect(
-    "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish"
-  )
-  .then(() => {
-    console.log("Connected to MongoDB");
-
-    app.post("/api/add_data", async (req, res) => {
-      console.log("result", req.body);
-
-      let data2 = model(req.body);
-      try {
-        let dataToStore = await data2.save();
-        res.status(200).json(dataToStore);
-      } catch (error) {
-        res.status(400).json({
-          message: "Error saving data",
-          error: error.message,
-        });
-      }
+const connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      bufferMaxEntries: 0, // Disable mongoose buffering
+      bufferCommands: false, // Disable mongoose buffering
     });
+    console.log("✅ Connected to MongoDB Atlas");
+  } catch (error) {
+    console.error("❌ MongoDB Connection Error:", error.message);
+    
+    // Try alternative connection string format
+    console.log("🔄 Trying alternative connection method...");
+    try {
+      const alternativeUri = "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish?retryWrites=true&w=majority";
+      await mongoose.connect(alternativeUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+      });
+      console.log("✅ Connected to MongoDB Atlas (alternative method)");
+    } catch (altError) {
+      console.error("❌ Alternative MongoDB connection also failed:", altError.message);
+      console.log("🔧 Please check:");
+      console.log("1. Internet connection");
+      console.log("2. MongoDB Atlas cluster status");
+      console.log("3. IP whitelist settings in MongoDB Atlas");
+      console.log("4. Username and password in connection string");
+      
+      // Don't exit the process, but warn about database unavailability
+      console.warn("⚠️  Server will continue without database connection");
+      console.warn("⚠️  Some features may not work properly");
+    }
+  }
+};
 
-    app.get("/api/get_data", (req, res) => {
-      if (data.length > 0) {
-        res.status(200).send({
-          status_code: 200,
-          message: data,
-        });
-      } else {
-        res.status(404).send({
-          status_code: 404,
-          message: "No data found",
-        });
-      }
-    });
-  })
-  .catch((error) => {
-    console.error("Error connecting to MongoDB:", error);
-  });
+// Connect to MongoDB
+connectToMongoDB();
 
-// Web APIs
-app.use("/api", authenticationRoute);
-app.use("/api", guideRoutes);
-app.use("/api", communiRoutes);
-app.use("/api", repairRoutes);
-app.use("/api", resturentRoutes);
-app.use("/api", healthRoutes);
-app.use("/api", houeskeepingRoutes);
-app.use("/api", taxiRoutes);
-app.use("/api", otherRoutes);
-app.use("/api", accommodationRoutes);
-app.use("/api", cardRoutes);
-app.use("/api", buythingsRoute);
-app.use("/api", adventuresRoute);
-app.use("/api", reviewsRoute);
-app.use("/api", placestovisitRoutes);
-app.use("/api", specialeventsRoutes);
-app.use("/api", learningpointsRoutes);
+// Handle MongoDB connection events
+mongoose.connection.on('connected', () => {
+  console.log('🔗 Mongoose connected to MongoDB');
+});
 
-app.use("/api", bookingRoutes);
+mongoose.connection.on('error', (err) => {
+  console.error('❌ Mongoose connection error:', err);
+});
 
+mongoose.connection.on('disconnected', () => {
+  console.log('🔌 Mongoose disconnected from MongoDB');
+});
 
-app.listen(2000, () => {
-  console.log("Server is running on port 2000");
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('🔌 MongoDB connection closed due to app termination');
+  process.exit(0);
+});
+
+// ✅ Routes from your original app.js + server.js
+const loginRouter = require("./routes/router"); // handles login/signup (username-based)
+app.use("/api/old", loginRouter); // Mount on /api/old to avoid conflict
+
+// ✅ Additional routes from original index.js
+app.use("/api", require("./routes/authenticationRoute"));
+app.use("/api", require("./routes/guideRoutes"));
+app.use("/api", require("./routes/communiRoutes"));
+app.use("/api", require("./routes/repairRoutes"));
+app.use("/api", require("./routes/resturentRoutes"));
+app.use("/api", require("./routes/healthRoutes"));
+app.use("/api", require("./routes/houeskeepingRoutes"));
+app.use("/api", require("./routes/taxiRoutes"));
+app.use("/api", require("./routes/otherRoutes"));
+app.use("/api", require("./routes/accommodationRoutes"));
+app.use("/api", require("./routes/cardRoutes"));
+app.use("/api", require("./routes/bookingRoutes"));
+app.use("/api", require("./routes/notificationRoutes"));
+app.use("/api", require("./routes/appNotificationRoutes"));
+
+// Start the server
+const PORT = 2000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

@@ -1,30 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const { createGuide, updateGuide, getGuide, getAllGuides, deleteGuide } = require('../controllers/addGuide');
-const { validateGuideCreation, validateGuideUpdate } = require('../validation/guideValidation');
-const { handleValidationErrors } = require('../validation/validationErrorHandler');
+const {
+  createGuideService,
+  getGuides,
+  getGuideById,
+  searchGuides,
+  updateGuideService,
+  deleteGuideService,
+  addGuide,
+} = require('../controllers/addGuide');
 
-// Create a new guide with validation
-router.post('/addGuide', 
-  validateGuideCreation,
-  handleValidationErrors,
-  createGuide
-);
+// Create a new guide
+router.post('/addGuide', createGuideService);
 
-// Update guide with validation (you can add this later)
-router.put('/updateGuide/:id',
-  validateGuideUpdate,
-  handleValidationErrors,
-  updateGuide
-);
+// Get all guides
+router.get('/guides', getGuides);
 
-// Get single guide (no validation needed)
-router.get('/guide/:id', getGuide);
+// Get a single guide by ID
+router.get('/guide/:id', getGuideById);
 
-// Get all guides (no validation needed)
-router.get('/guides', getAllGuides);
+// Search guides
+router.post('/guides/search', searchGuides);
 
-// Delete guide (only need to validate ID)
-router.delete('/guide/:id', deleteGuide);
+// Update guide
+router.put('/guide/:id', updateGuideService);
+
+// Delete guide
+router.delete('/guide/:id', deleteGuideService);
 
 module.exports = router;
