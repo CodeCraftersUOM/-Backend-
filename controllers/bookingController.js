@@ -1,6 +1,11 @@
 // controllers/bookingController.js (Create this new file)
 const Booking = require("../models/bookingModel");
 const AccommodationService = require("../models/accommodationModel"); // Assuming your accommodation model is named this
+const Notification = require("../models/app_notification_model"); // Assuming your notification model is named this
+const {
+  sendBookingNotification,
+  sendCustomerNotification,
+} = require("../utils/notifications");
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
@@ -22,6 +27,19 @@ exports.createBooking = async (req, res) => {
 
     const newBooking = new Booking(bookingData);
     const savedBooking = await newBooking.save();
+
+    // 🔔 Send notification to service provider
+    try {
+      const notificationResult = await sendBookingNotification(
+        savedBooking,
+        accommodation,
+        "new_booking"
+      );
+      console.log("Notification sent:", notificationResult);
+    } catch (notificationError) {
+      console.error("Failed to send notification:", notificationError);
+      // Don't fail the booking if notification fails
+    }
 
     // In a real system:
     // 1. Notify the service provider (e.g., send an email, push notification, or add to their dashboard)
@@ -88,6 +106,22 @@ exports.updateBookingStatus = async (req, res) => {
         .json({ success: false, error: "Booking not found" });
     }
 
+    // 🔔 Send notification to customer about status update
+    try {
+      let notificationType = "booking_confirmed";
+      if (status === "rejected") notificationType = "booking_rejected";
+      if (status === "cancelled") notificationType = "booking_cancelled";
+
+      const customerNotificationResult = await sendCustomerNotification(
+        booking,
+        notificationType
+      );
+      console.log("Customer notification sent:", customerNotificationResult);
+    } catch (notificationError) {
+      console.error("Failed to send customer notification:", notificationError);
+      // Don't fail the status update if notification fails
+    }
+
     // If confirmed, you might need to manage room availability
     // If confirmed, you would also notify the customer (e.g., via email or app notification)
 
@@ -124,6 +158,104 @@ exports.getBookingStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Server error fetching booking status",
+      details: error.message,
+    });
+  }
+};
+
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { status } = req.body; // 'confirmed' or 'rejected'
+
+    if (!["confirmed", "rejected", "cancelled", "completed"].includes(status)) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid booking status" });
+    }
+
+    const booking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status: status },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Booking not found" });
+    }
+
+    // 🔔 Send notification to customer about status update
+    try {
+      let notificationType = "booking_confirmed";
+      let title = "Booking Confirmed!";
+      let message = `Your booking for ${
+        booking.accommodationName
+      } from ${new Date(
+        booking.checkInDate
+      ).toLocaleDateString()} to ${new Date(
+        booking.checkOutDate
+      ).toLocaleDateString()} has been confirmed.`;
+
+      if (status === "rejected") {
+        notificationType = "booking_rejected";
+        title = "Booking Rejected!";
+        message = `Unfortunately, your booking for ${
+          booking.accommodationName
+        } from ${new Date(
+          booking.checkInDate
+        ).toLocaleDateString()} to ${new Date(
+          booking.checkOutDate
+        ).toLocaleDateString()} has been rejected.`;
+      }
+      if (status === "cancelled") {
+        notificationType = "booking_cancelled";
+        title = "Booking Cancelled!";
+        message = `Your booking for ${
+          booking.accommodationName
+        } from ${new Date(
+          booking.checkInDate
+        ).toLocaleDateString()} to ${new Date(
+          booking.checkOutDate
+        ).toLocaleDateString()} has been cancelled.`;
+      }
+
+      // Create and save the notification in the database
+      const newNotification = new Notification({
+        userId: booking.customerUserId, // Assuming your booking model has customerUserId (you might need to add this to bookingModel.js if not present)
+        title: title,
+        message: message,
+        type: notificationType,
+        bookingId: booking._id,
+      });
+      await newNotification.save();
+      console.log("Notification saved to DB:", newNotification);
+
+      // Optionally, still send push notifications/emails via sendCustomerNotification if it's an external service
+      const customerNotificationResult = await sendCustomerNotification(
+        booking,
+        notificationType
+      );
+      console.log(
+        "Customer external notification sent:",
+        customerNotificationResult
+      );
+    } catch (notificationError) {
+      console.error("Failed to send customer notification:", notificationError);
+      // Don't fail the status update if notification fails
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Booking status updated to ${status}`,
+      data: booking,
+    });
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error updating booking status",
       details: error.message,
     });
   }
