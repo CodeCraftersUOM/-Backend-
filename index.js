@@ -1,41 +1,51 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const authenticationRoute = require("./routes/authenticationRoute");
-const guideRoutes = require("./routes/guideRoutes");
-const communiRoutes = require("./routes/communiRoutes");
-const repairRoutes = require("./routes/repairRoutes");
-const resturentRoutes = require("./routes/resturentRoutes");
-const healthRoutes = require("./routes/healthRoutes");
-const houeskeepingRoutes = require("./routes/houeskeepingRoutes");
-const taxiRoutes = require("./routes/taxiRoutes");
-const otherRoutes = require("./routes/otherRoutes");
-const accommodationRoutes = require("./routes/accommodationRoutes");
-const cardRoutes = require("./routes/cardRoutes");
+const cookieParser = require("cookie-parser");
 
-const buythingsRoute = require("./routes/buythingsRoute");
-const adventuresRoute = require("./routes/adventuresRoute");
-const reviewsRoute = require("./routes/reviewsRoute");
-const placestovisitRoutes = require("./routes/placestovisitRoutes");
-const specialeventsRoutes = require("./routes/specialeventsRoutes");
-const learningpointsRoutes = require("./routes/learningpointsRoutes");
+const app = express();
 
-const bookingRoutes = require("./routes/bookingRoutes");
+// Middleware
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Adjust if needed
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-const cookieParser = require("cookie-parser"); // ✅ Enables req.cookies
+// MongoDB Connection
+const uri =
+  "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish";
+mongoose
+  .connect(uri)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
-mongoose.connection.once('open', async () => {
-  const collections = [
-    'things_to_do',
-    'specialevents',
-    'learningpoints',
-    'buythings',
-    'adventures'
-  ];
+// ✅ Routes from your original app.js + server.js
+const loginRouter = require("./routes/router"); // handles login/signup
+app.use("/api", loginRouter);
 
-  for (const collectionName of collections) {
-    try {
-      const result = await mongoose.connection.db
-        .collection(collectionName)
-        .dropIndex('id_1');
-      cons
+// ✅ Additional routes from original index.js
+app.use("/api", require("./routes/authenticationRoute"));
+app.use("/api", require("./routes/guideRoutes"));
+app.use("/api", require("./routes/communiRoutes"));
+app.use("/api", require("./routes/repairRoutes"));
+app.use("/api", require("./routes/resturentRoutes"));
+app.use("/api", require("./routes/healthRoutes"));
+app.use("/api", require("./routes/houeskeepingRoutes"));
+app.use("/api", require("./routes/taxiRoutes"));
+app.use("/api", require("./routes/otherRoutes"));
+app.use("/api", require("./routes/accommodationRoutes"));
+app.use("/api", require("./routes/cardRoutes"));
+app.use("/api", require("./routes/bookingRoutes"));
+app.use("/api", require("./routes/notificationRoutes"));
+app.use("/api", require("./routes/appNotificationRoutes"));
+
+// Start the server
+const PORT = 2000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
