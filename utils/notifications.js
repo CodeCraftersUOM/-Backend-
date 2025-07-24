@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const DeviceToken = require('../models/deviceTokenModel');
+const PushNotification = require('../models/pushNotificationModel');
 
 // Email transporter (reusing your existing configuration)
 const transporter = nodemailer.createTransport({
@@ -66,6 +68,121 @@ const sendEmailNotification = async (to, subject, content) => {
   }
 };
 
+// Send mobile push notification
+const sendMobilePushNotification = async (userId, title, message, data = {}) => {
+  try {
+    // Get all active device tokens for the user
+    const deviceTokens = await DeviceToken.find({ 
+      userId: userId, 
+      isActive: true 
+    });
+
+    if (deviceTokens.length === 0) {
+      console.log('No active device tokens found for user:', userId);
+      return { 
+        success: false, 
+        error: 'No active device tokens found',
+        deviceTokensUsed: []
+      };
+    }
+
+    const results = [];
+    
+    // Send push notification to each device
+    for (const deviceToken of deviceTokens) {
+      try {
+        // For now, we'll simulate sending push notifications
+        // In production, you would use Firebase FCM, OneSignal, or similar service
+        const pushResult = await sendPushToDevice(deviceToken.deviceToken, title, message, data, deviceToken.platform);
+        
+        results.push({
+          deviceToken: deviceToken.deviceToken,
+          status: pushResult.success ? 'sent' : 'failed',
+          errorMessage: pushResult.error || null
+        });
+
+        // Update last used timestamp
+        deviceToken.lastUsed = new Date();
+        await deviceToken.save();
+        
+      } catch (error) {
+        console.error('Error sending push to device:', error);
+        results.push({
+          deviceToken: deviceToken.deviceToken,
+          status: 'failed',
+          errorMessage: error.message
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.status === 'sent').length;
+    
+    return {
+      success: successCount > 0,
+      deviceTokensUsed: results,
+      totalDevices: deviceTokens.length,
+      successCount: successCount
+    };
+    
+  } catch (error) {
+    console.error('Error in sendMobilePushNotification:', error);
+    return {
+      success: false,
+      error: error.message,
+      deviceTokensUsed: []
+    };
+  }
+};
+
+// Simulate push notification sending (replace with actual FCM/OneSignal implementation)
+const sendPushToDevice = async (deviceToken, title, message, data, platform) => {
+  try {
+    // This is a placeholder for actual push notification service
+    // Replace this with your actual FCM/OneSignal/etc. implementation
+    
+    console.log(`📱 [${platform.toUpperCase()}] Sending push notification:`);
+    console.log(`📱 Device Token: ${deviceToken.substring(0, 20)}...`);
+    console.log(`📱 Title: ${title}`);
+    console.log(`📱 Message: ${message}`);
+    console.log(`📱 Data:`, data);
+    
+    // Simulate success/failure (90% success rate)
+    const isSuccess = Math.random() > 0.1;
+    
+    if (isSuccess) {
+      return { success: true };
+    } else {
+      return { success: false, error: 'Device token invalid or expired' };
+    }
+    
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Store push notification in database
+const storePushNotification = async (userId, bookingId, type, title, message, data, deviceTokenResults) => {
+  try {
+    const pushNotification = new PushNotification({
+      userId: userId,
+      bookingId: bookingId,
+      type: type,
+      title: title,
+      message: message,
+      data: data,
+      status: deviceTokenResults.success ? 'sent' : 'failed',
+      deviceTokensUsed: deviceTokenResults.deviceTokensUsed,
+      sentAt: new Date()
+    });
+
+    const saved = await pushNotification.save();
+    return { success: true, data: saved };
+  } catch (error) {
+    console.error('Error storing push notification:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Send booking notification to service provider
 const sendBookingNotification = async (booking, accommodation, type = 'new_booking') => {
   try {
@@ -118,7 +235,7 @@ const sendCustomerNotification = async (booking, type = 'booking_confirmed') => 
   try {
     const notifications = [];
     
-    // Send email to customer
+    // 1. Send email to customer
     if (booking.customerEmail) {
       const emailContent = generateCustomerEmailContent(type, booking);
       const emailResult = await sendEmailNotification(
@@ -127,6 +244,42 @@ const sendCustomerNotification = async (booking, type = 'booking_confirmed') => 
         emailContent
       );
       notifications.push({ type: 'email', ...emailResult });
+    }
+    
+    // 2. Send mobile push notification to customer
+    if (booking.customerId) {
+      const pushTitle = getCustomerNotificationTitle(type);
+      const pushMessage = getCustomerPushMessage(type, booking);
+      const pushData = {
+        bookingId: booking._id.toString(),
+        type: type,
+        status: booking.status,
+        checkInDate: booking.checkInDate,
+        checkOutDate: booking.checkOutDate
+      };
+      
+      const pushResult = await sendMobilePushNotification(
+        booking.customerId,
+        pushTitle,
+        pushMessage,
+        pushData
+      );
+      
+      notifications.push({ type: 'push', ...pushResult });
+      
+      // Store push notification in database
+      if (pushResult.success || pushResult.deviceTokensUsed.length > 0) {
+        const storeResult = await storePushNotification(
+          booking.customerId,
+          booking._id,
+          type,
+          pushTitle,
+          pushMessage,
+          pushData,
+          pushResult
+        );
+        console.log('Push notification stored:', storeResult.success);
+      }
     }
     
     return {
@@ -173,6 +326,19 @@ const getCustomerNotificationTitle = (type) => {
     'booking_cancelled': '🚫 Booking Cancelled'
   };
   return titles[type] || 'Booking Update';
+};
+
+const getCustomerPushMessage = (type, booking) => {
+  switch (type) {
+    case 'booking_confirmed':
+      return `Your booking for ${booking.checkInDate} has been confirmed! Get ready for your trip.`;
+    case 'booking_rejected':
+      return `Your booking request for ${booking.checkInDate} was not approved. Check other available options.`;
+    case 'booking_cancelled':
+      return `Your booking for ${booking.checkInDate} has been cancelled.`;
+    default:
+      return 'Your booking status has been updated.';
+  }
 };
 
 const generateEmailContent = (type, booking, accommodation) => {
@@ -242,5 +408,7 @@ module.exports = {
   sendCustomerNotification,
   getWebNotifications,
   markNotificationAsRead,
-  sendEmailNotification
+  sendEmailNotification,
+  sendMobilePushNotification,
+  storePushNotification
 };
