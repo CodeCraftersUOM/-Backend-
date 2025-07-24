@@ -1,12 +1,12 @@
-// models/notificationModel.js
+// models/app_notification_model.js
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId, // Assuming you have a User model and users have ObjectIds
-      ref: "User", // Reference to your User model (adjust if your user model has a different name)
-      //   required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     title: {
       type: String,
@@ -23,21 +23,26 @@ const notificationSchema = new mongoose.Schema(
         "booking_confirmed",
         "booking_rejected",
         "booking_cancelled",
+        "booking_completed",
+        "new_booking",
         "new_message",
         "promotion",
         "other",
-      ], // Add all used types here
+      ],
       default: "booking_status",
     },
     isRead: {
       type: Boolean,
       default: false,
     },
-    // You might want to link it to a specific booking or other entity
     bookingId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
-      required: false, // Not all notifications might be related to a booking
+      required: false,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }

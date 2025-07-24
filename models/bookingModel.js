@@ -24,7 +24,7 @@ const bookingSchema = new mongoose.Schema(
       // Add this field to link to the user
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Assuming your user model is named 'User'
-      // required: true, // Make it required if every booking must have a user
+      required: true, // Make it required if every booking must have a user
     },
     checkInDate: {
       type: Date,
