@@ -21,6 +21,7 @@ const housekeepingLaundryServiceSchema = new mongoose.Schema({
     required: true,
     trim: true,
     lowercase: true,
+    unique: true,
   },
   alternatePhone: {
     type: String,
@@ -53,6 +54,27 @@ const housekeepingLaundryServiceSchema = new mongoose.Schema({
     required: true,
     enum: ['Per Hour', 'Per Square Foot', 'Per Visit', 'Custom Quote'],
   },
+  
+  // Enhanced pricing structure
+  pricing: {
+    hourlyRate: {
+      type: Number,
+      min: 0,
+    },
+    perSquareFootRate: {
+      type: Number,
+      min: 0,
+    },
+    perVisitRate: {
+      type: Number,
+      min: 0,
+    },
+    minimumCharge: {
+      type: Number,
+      min: 0,
+    },
+  },
+
   serviceArea: {
     type: String,
     required: true,
@@ -66,6 +88,7 @@ const housekeepingLaundryServiceSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+
   availability: {
     daysAvailable: {
       type: [String],
@@ -82,20 +105,80 @@ const housekeepingLaundryServiceSchema = new mongoose.Schema({
       default: false,
     }
   },
+
+  // Additional service details
+  teamSize: {
+    type: Number,
+    min: 1,
+    default: 1,
+  },
+  yearsInBusiness: {
+    type: Number,
+    min: 0,
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: 3,
+  },
+
+  // Equipment and supplies
+  equipmentProvided: {
+    cleaningSupplies: { type: Boolean, default: true },
+    cleaningEquipment: { type: Boolean, default: true },
+    ecoFriendlyProducts: { type: Boolean, default: false },
+    disinfectants: { type: Boolean, default: true },
+  },
+
+  // Service features
+  serviceFeatures: {
+    backgroundCheckedStaff: { type: Boolean, default: false },
+    insured: { type: Boolean, default: false },
+    bonded: { type: Boolean, default: false },
+    uniformedStaff: { type: Boolean, default: false },
+    flexibleScheduling: { type: Boolean, default: true },
+    sameTeamEachVisit: { type: Boolean, default: false },
+    satisfactionGuarantee: { type: Boolean, default: false },
+    onlineBooking: { type: Boolean, default: false },
+  },
+
+  // Payment options
+  paymentOptions: {
+    cash: { type: Boolean, default: true },
+    card: { type: Boolean, default: false },
+    digitalPayment: { type: Boolean, default: false },
+    monthlyBilling: { type: Boolean, default: false },
+  },
+
   businessRegistrationNumber: {
     type: String,
     trim: true,
   },
   licensesCertificates: {
     type: [String], // Array of file URLs or paths
-    trim: true,
   },
+  
+  // Status
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'temporarily_closed'],
+    default: 'active',
+  },
+
   termsAgreed: {
     type: Boolean,
     required: true,
   }
 }, { timestamps: true });
 
-const HousekeepingLaundryService = mongoose.models.HousekeepingLaundryService || mongoose.model('HousekeepingLaundryService', housekeepingLaundryServiceSchema);
+// Indexes for better query performance
+housekeepingLaundryServiceSchema.index({ serviceArea: 1, serviceTypes: 1 });
+housekeepingLaundryServiceSchema.index({ rating: -1, 'pricing.hourlyRate': 1 });
+housekeepingLaundryServiceSchema.index({ status: 1 });
+housekeepingLaundryServiceSchema.index({ contactEmail: 1 }, { unique: true });
+
+const HousekeepingLaundryService = mongoose.models.HousekeepingLaundryService || 
+  mongoose.model('HousekeepingLaundryService', housekeepingLaundryServiceSchema);
 
 module.exports = HousekeepingLaundryService;
