@@ -53,10 +53,7 @@ const pushNotificationSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for efficient queries
-pushNotificationSchema.index({ userId: 1, createdAt: -1 });
-pushNotificationSchema.index({ bookingId: 1 });
-pushNotificationSchema.index({ type: 1 });
+
 
 const PushNotification = mongoose.model('PushNotification', pushNotificationSchema);
 

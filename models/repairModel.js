@@ -186,10 +186,7 @@ const vehicleRepairServiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Indexes for better query performance
-vehicleRepairServiceSchema.index({ locationAddress: 1, serviceType: 1 });
-vehicleRepairServiceSchema.index({ rating: -1, averageServiceCost: 1 });
-vehicleRepairServiceSchema.index({ status: 1 });
+
 
 const VehicleRepairService =
   mongoose.models.VehicleRepairService ||

@@ -10,7 +10,7 @@ const deviceTokenSchema = new mongoose.Schema({
   deviceToken: {
     type: String,
     required: true,
-    unique: true
+    unique: true // Already creates index
   },
   platform: {
     type: String,
@@ -33,9 +33,8 @@ const deviceTokenSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for efficient queries
+// Keep only other useful indexes
 deviceTokenSchema.index({ userId: 1, isActive: 1 });
-deviceTokenSchema.index({ deviceToken: 1 });
 
 const DeviceToken = mongoose.model('DeviceToken', deviceTokenSchema);
 

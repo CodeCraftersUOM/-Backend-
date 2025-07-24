@@ -21,7 +21,7 @@ const housekeepingLaundryServiceSchema = new mongoose.Schema({
     required: true,
     trim: true,
     lowercase: true,
-    unique: true,
+    
   },
   alternatePhone: {
     type: String,
@@ -172,11 +172,7 @@ const housekeepingLaundryServiceSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Indexes for better query performance
-housekeepingLaundryServiceSchema.index({ serviceArea: 1, serviceTypes: 1 });
-housekeepingLaundryServiceSchema.index({ rating: -1, 'pricing.hourlyRate': 1 });
-housekeepingLaundryServiceSchema.index({ status: 1 });
-housekeepingLaundryServiceSchema.index({ contactEmail: 1 }, { unique: true });
+
 
 const HousekeepingLaundryService = mongoose.models.HousekeepingLaundryService || 
   mongoose.model('HousekeepingLaundryService', housekeepingLaundryServiceSchema);
