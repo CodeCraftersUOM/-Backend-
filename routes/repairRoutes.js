@@ -5,26 +5,18 @@ const {
   getRepairServices,
   getRepairServiceById,
   searchRepairServices,
-  updateRepairService,
-  deleteRepairService,
 } = require("../controllers/addRepair");
 
-// Create new repair service
+// POST route to create a new repair service
 router.post("/addRepair", createVehicleRepairService);
 
-// Get all repair services (with pagination)
+// GET route to fetch all repair services
 router.get("/repairs", getRepairServices);
 
-// Get single repair service by ID
+// GET route to fetch a single repair service by ID
 router.get("/repairs/:id", getRepairServiceById);
 
-// Search repair services
-router.get("/repairs/search", searchRepairServices);
-
-// Update repair service
-router.put("/repairs/:id", updateRepairService);
-
-// Delete repair service (soft delete)
-router.delete("/repairs/:id", deleteRepairService);
+// POST route for searching and filtering repair services (CHANGED from GET to POST)
+router.post("/repairs/search", searchRepairServices);
 
 module.exports = router;

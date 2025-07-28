@@ -5,26 +5,22 @@ const {
   getHousekeepingServices,
   getHousekeepingServiceById,
   searchHousekeepingServices,
-  updateHousekeepingService,
-  deleteHousekeepingService,
 } = require('../controllers/addhousekeeping');
 
 // Create new housekeeping service
 router.post('/addhousekeeping', createHousekeepingLaundryService);
 
-// Get all housekeeping services (with pagination)
+// Get all housekeeping services
 router.get('/housekeeping', getHousekeepingServices);
 
 // Get single housekeeping service by ID
 router.get('/housekeeping/:id', getHousekeepingServiceById);
 
-// Search housekeeping services
-router.get('/housekeeping/search', searchHousekeepingServices);
+// Search housekeeping services (CHANGED from GET to POST)
+router.post('/housekeeping/search', searchHousekeepingServices);
 
-// Update housekeeping service
-router.put('/housekeeping/:id', updateHousekeepingService);
-
-// Delete housekeeping service (soft delete)
-router.delete('/housekeeping/:id', deleteHousekeepingService);
+// You can add update and delete routes here if needed, like so:
+// router.put('/housekeeping/:id', updateHousekeepingService);
+// router.delete('/housekeeping/:id', deleteHousekeepingService);
 
 module.exports = router;

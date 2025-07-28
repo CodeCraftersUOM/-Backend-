@@ -1,41 +1,32 @@
-
 const express = require('express');
 const router = express.Router();
 const {
   createCommunicationService,
-  updateCommunicationService,
-  getCommunicationService,
   getAllCommunicationServices,
+  getCommunicationService, // CORRECTED: Renamed from getCommunicationServiceById
+  searchCommunicationServices,
+  updateCommunicationService,
   deleteCommunicationService
 } = require('../controllers/addCommuni');
 
-const { 
-  validateCommunicationServiceCreation, 
-  validateCommunicationServiceUpdate 
-} = require('../validation/communicationValidation');
-const { handleValidationErrors } = require('../validation/validationErrorHandler');
+// Standardized routes to match other features
 
-// Create communication service with validation
-router.post('/addCommuni',
-  validateCommunicationServiceCreation,
-  handleValidationErrors,
-  createCommunicationService
-);
+// Create communication service
+router.post('/communications', createCommunicationService);
 
-// Update communication service with validation
-router.put('/updateCommuni/:id',
-  validateCommunicationServiceUpdate,
-  handleValidationErrors,
-  updateCommunicationService
-);
+// Get all communication services
+router.get('/communications', getAllCommunicationServices);
 
-// Get single communication service
-router.get('/communi/:id', getCommunicationService);
+// Get single communication service by ID
+router.get('/communications/:id', getCommunicationService); // CORRECTED: Using the correct function name
 
-// Get all communication services with filtering
-router.get('/communis', getAllCommunicationServices);
+// Search for communication services (CHANGED to POST)
+router.post('/communications/search', searchCommunicationServices);
+
+// Update communication service
+router.put('/communications/:id', updateCommunicationService);
 
 // Delete communication service
-router.delete('/communi/:id', deleteCommunicationService);
+router.delete('/communications/:id', deleteCommunicationService);
 
 module.exports = router;
