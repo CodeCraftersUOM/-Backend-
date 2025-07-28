@@ -1,11 +1,10 @@
 const CommunicationService = require('../models/communicationModel');
 
-// Create a new communication service
+// Create a new communication service (with original error handling)
 const createCommunicationService = async (req, res) => {
   try {
     const serviceData = req.body;
     
-    // Check if communication service with same email or business registration already exists
     const existingService = await CommunicationService.findOne({
       $or: [
         { emailAddress: serviceData.emailAddress },
@@ -22,10 +21,7 @@ const createCommunicationService = async (req, res) => {
       });
     }
     
-    // Create new communication service document
     const newService = new CommunicationService(serviceData);
-    
-    // Save to database
     const savedService = await newService.save();
     
     res.status(201).json({
@@ -34,7 +30,6 @@ const createCommunicationService = async (req, res) => {
       data: savedService,
     });
   } catch (error) {
-    // Handle mongoose validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => ({
         field: err.path,
@@ -49,7 +44,6 @@ const createCommunicationService = async (req, res) => {
       });
     }
     
-    // Handle duplicate key errors
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
@@ -59,7 +53,6 @@ const createCommunicationService = async (req, res) => {
       });
     }
     
-    // Handle other errors
     console.error('Error creating communication service:', error);
     res.status(500).json({
       success: false,
@@ -69,13 +62,12 @@ const createCommunicationService = async (req, res) => {
   }
 };
 
-// Update communication service
+// Update communication service (with original error handling)
 const updateCommunicationService = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
     
-    // Check if service exists
     const existingService = await CommunicationService.findById(id);
     if (!existingService) {
       return res.status(404).json({
@@ -84,10 +76,9 @@ const updateCommunicationService = async (req, res) => {
       });
     }
     
-    // Check for duplicate email or business registration if they're being updated
     if (updateData.emailAddress || updateData.businessRegistration) {
       const duplicateQuery = {
-        _id: { $ne: id }, // Exclude current service
+        _id: { $ne: id },
         $or: []
       };
       
@@ -109,7 +100,6 @@ const updateCommunicationService = async (req, res) => {
       }
     }
     
-    // Update service
     const updatedService = await CommunicationService.findByIdAndUpdate(
       id,
       updateData,
@@ -122,7 +112,6 @@ const updateCommunicationService = async (req, res) => {
       data: updatedService
     });
   } catch (error) {
-    // Handle mongoose validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => ({
         field: err.path,
@@ -137,7 +126,6 @@ const updateCommunicationService = async (req, res) => {
       });
     }
     
-    // Handle duplicate key errors
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
@@ -156,7 +144,7 @@ const updateCommunicationService = async (req, res) => {
   }
 };
 
-// Get single communication service
+// Get single communication service (Original function)
 const getCommunicationService = async (req, res) => {
   try {
     const { id } = req.params;
@@ -182,52 +170,14 @@ const getCommunicationService = async (req, res) => {
   }
 };
 
-// Get all communication services
+// Get all communication services (MODIFIED to remove pagination)
 const getAllCommunicationServices = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      serviceType, 
-      paymentMethod, 
-      coverageArea
-    } = req.query;
-    
-    // Build filter object
-    const filter = {};
-    
-    if (serviceType) {
-      filter.serviceTypesOffered = { $in: [serviceType] };
-    }
-    
-    if (paymentMethod) {
-      filter.paymentMethods = { $in: [paymentMethod] };
-    }
-    
-    if (coverageArea) {
-      filter.serviceCoverageArea = { $in: [coverageArea] };
-    }
-    
-    // Calculate pagination
-    const skip = (page - 1) * limit;
-    
-    // Fetch services with filters and pagination
-    const services = await CommunicationService.find(filter)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
-    
-    const total = await CommunicationService.countDocuments(filter);
+    const services = await CommunicationService.find({}).sort({ createdAt: -1 });
     
     res.json({
       success: true,
       data: services,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / limit),
-        totalServices: total,
-        limit: parseInt(limit)
-      }
     });
   } catch (error) {
     console.error('Error fetching communication services:', error);
@@ -238,7 +188,7 @@ const getAllCommunicationServices = async (req, res) => {
   }
 };
 
-// Delete communication service
+// Delete communication service (Original function)
 const deleteCommunicationService = async (req, res) => {
   try {
     const { id } = req.params;
@@ -266,10 +216,42 @@ const deleteCommunicationService = async (req, res) => {
   }
 };
 
+// NEW: Search and filter communication services (using POST)
+const searchCommunicationServices = async (req, res) => {
+    try {
+        const { query, serviceType, paymentMethod, coverageArea } = req.body;
+        let filter = {};
+
+        if (query) {
+            filter.$or = [
+                { companyName: { $regex: query, $options: "i" } },
+                { specialFeatures: { $regex: query, $options: "i" } },
+            ];
+        }
+        if (serviceType) {
+            filter.serviceTypesOffered = { $in: [serviceType] };
+        }
+        if (paymentMethod) {
+            filter.paymentMethods = { $in: [paymentMethod] };
+        }
+        if (coverageArea) {
+            filter.serviceCoverageArea = { $in: [coverageArea] };
+        }
+
+        const services = await CommunicationService.find(filter);
+        res.status(200).json({ success: true, data: services });
+
+    } catch (error) {
+        console.error("Error searching communication services:", error);
+        res.status(500).json({ success: false, error: "Server error during search" });
+    }
+};
+
 module.exports = {
   createCommunicationService,
   updateCommunicationService,
   getCommunicationService,
   getAllCommunicationServices,
-  deleteCommunicationService
+  deleteCommunicationService,
+  searchCommunicationServices, // ADDED new function to exports
 };

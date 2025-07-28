@@ -1,82 +1,40 @@
 const HousekeepingLaundryService = require('../models/housekeepingModel');
 
+// Create new housekeeping service
 const createHousekeepingLaundryService = async (req, res) => {
   try {
     const serviceData = req.body;
-
-    // Create new document
-    const newService = new HousekeepingLaundryService({
-      ...serviceData,
-    });
-
-    // Save to MongoDB
+    const newService = new HousekeepingLaundryService({ ...serviceData });
     const savedService = await newService.save();
-
-    res.status(201).json({
-      success: true,
-      data: savedService,
-    });
+    res.status(201).json({ success: true, data: savedService });
   } catch (error) {
     console.error('Error creating housekeeping/laundry service:', error);
-
     if (error.name === 'ValidationError') {
       const errors = {};
       for (let field in error.errors) {
         errors[field] = error.errors[field].message;
       }
-      return res.status(400).json({
-        success: false,
-        error: 'Validation Failed',
-        details: errors,
-      });
+      return res.status(400).json({ success: false, error: 'Validation Failed', details: errors });
     }
-
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
-      return res.status(409).json({
-        success: false,
-        error: `${field} already exists`,
-      });
+      return res.status(409).json({ success: false, error: `${field} already exists` });
     }
-
-    res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
-// Get all housekeeping services
+// Get all housekeeping services (REMOVED pagination to match accommodation)
 const getHousekeepingServices = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const services = await HousekeepingLaundryService
-      .find({ status: 'active' })
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
-
-    const total = await HousekeepingLaundryService.countDocuments({ status: 'active' });
-
+    const services = await HousekeepingLaundryService.find({ status: 'active' }).sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       data: services,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     console.error('Error fetching housekeeping services:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -85,30 +43,17 @@ const getHousekeepingServiceById = async (req, res) => {
   try {
     const { id } = req.params;
     const service = await HousekeepingLaundryService.findById(id);
-
     if (!service) {
-      return res.status(404).json({
-        success: false,
-        error: 'Housekeeping service not found',
-      });
+      return res.status(404).json({ success: false, error: 'Housekeeping service not found' });
     }
-
-    console.log('Housekeeping service data fetched by ID');
-
-    res.status(200).json({
-      success: true,
-      data: service,
-    });
+    res.status(200).json({ success: true, data: service });
   } catch (error) {
     console.error('Error fetching housekeeping service by ID:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
-// Search and filter housekeeping services
+// Search and filter housekeeping services (CHANGED to use req.body)
 const searchHousekeepingServices = async (req, res) => {
   try {
     const {
@@ -119,82 +64,43 @@ const searchHousekeepingServices = async (req, res) => {
       serviceArea,
       serviceType,
       pricingMethod,
-    } = req.query;
+    } = req.body; // CHANGED from req.query to req.body
 
     let filter = { status: 'active' };
 
-    // Text search for business name and description
     if (query) {
       filter.$or = [
-        {
-          businessName: {
-            $regex: query,
-            $options: 'i',
-          },
-        },
-        {
-          businessDescription: {
-            $regex: query,
-            $options: 'i',
-          },
-        },
+        { businessName: { $regex: query, $options: 'i' } },
+        { businessDescription: { $regex: query, $options: 'i' } },
       ];
     }
-
-    // Service area search
     if (serviceArea) {
-      filter.serviceArea = {
-        $regex: serviceArea,
-        $options: 'i',
-      };
+      filter.serviceArea = { $regex: serviceArea, $options: 'i' };
     }
-
-    // Service type filter
     if (serviceType) {
-      filter.serviceTypes = {
-        $in: [serviceType],
-      };
+      filter.serviceTypes = { $in: [serviceType] };
     }
-
-    // Pricing method filter
     if (pricingMethod) {
       filter.pricingMethod = pricingMethod;
     }
-
-    // Price range filter (hourly rate)
     if (minPrice != null || maxPrice != null) {
       filter['pricing.hourlyRate'] = {};
-      if (minPrice != null) {
-        filter['pricing.hourlyRate'].$gte = minPrice;
-      }
-      if (maxPrice != null) {
-        filter['pricing.hourlyRate'].$lte = maxPrice;
-      }
+      if (minPrice != null) filter['pricing.hourlyRate'].$gte = minPrice;
+      if (maxPrice != null) filter['pricing.hourlyRate'].$lte = maxPrice;
     }
-
-    // Minimum rating filter
     if (minRating != null) {
-      filter.rating = {
-        $gte: minRating,
-      };
+      filter.rating = { $gte: minRating };
     }
 
     const services = await HousekeepingLaundryService.find(filter);
-
-    res.status(200).json({
-      success: true,
-      data: services,
-    });
+    res.status(200).json({ success: true, data: services });
   } catch (error) {
     console.error('Error searching housekeeping services:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during search',
-    });
+    res.status(500).json({ success: false, error: 'Server error during search' });
   }
 };
 
-// Update housekeeping service
+// RESTORED: Update housekeeping service
 const updateHousekeepingService = async (req, res) => {
   try {
     const { id } = req.params;
@@ -226,7 +132,7 @@ const updateHousekeepingService = async (req, res) => {
   }
 };
 
-// Delete housekeeping service (soft delete)
+// RESTORED: Delete housekeeping service (soft delete)
 const deleteHousekeepingService = async (req, res) => {
   try {
     const { id } = req.params;
@@ -257,11 +163,12 @@ const deleteHousekeepingService = async (req, res) => {
   }
 };
 
+
 module.exports = {
   createHousekeepingLaundryService,
   getHousekeepingServices,
   getHousekeepingServiceById,
   searchHousekeepingServices,
-  updateHousekeepingService,
-  deleteHousekeepingService,
+  updateHousekeepingService, // RESTORED
+  deleteHousekeepingService, // RESTORED
 };

@@ -7,42 +7,37 @@ const {
   getAllHealthServices,
   deleteHealthService,
   getHealthServicesBySpecialty,
-  getEmergencyServices
+  getEmergencyServices,
+  searchHealthServices // Import the new search function
 } = require('../controllers/addhealth');
 
-const { 
-  validateHealthServiceCreation, 
-  validateHealthServiceUpdate 
-} = require('../validation/healthValidation');
-const { handleValidationErrors } = require('../validation/validationErrorHandler');
+// Note: Your validation middleware can be added back here if needed.
+// const { validateHealthServiceCreation, validateHealthServiceUpdate } = require('../validation/healthValidation');
+// const { handleValidationErrors } = require('../validation/validationErrorHandler');
 
-// Create health service with validation
-router.post('/addHelth',
-  validateHealthServiceCreation,
-  handleValidationErrors,
-  createHealthService
-);
+// Standardized routes to match other features
+const baseRoute = '/health-services';
 
-// Update health service with validation
-router.put('/updateHealth/:id',
-  validateHealthServiceUpdate,
-  handleValidationErrors,
-  updateHealthService
-);
+// Create health service
+router.post(baseRoute, createHealthService);
 
-// Get single health service
-router.get('/health/:id', getHealthService);
+// Get all health services
+router.get(baseRoute, getAllHealthServices);
 
-// Get all health services with filtering
-router.get('/healths', getAllHealthServices);
+// Search for health services (NEW - using POST)
+router.post(`${baseRoute}/search`, searchHealthServices);
 
-// Get health services by specialty
-router.get('/healths/specialty/:specialty', getHealthServicesBySpecialty);
+// Get single health service by ID
+router.get(`${baseRoute}/:id`, getHealthService);
 
-// Get emergency services
-router.get('/healths/emergency', getEmergencyServices);
+// Update health service
+router.put(`${baseRoute}/:id`, updateHealthService);
 
 // Delete health service
-router.delete('/health/:id', deleteHealthService);
+router.delete(`${baseRoute}/:id`, deleteHealthService);
+
+// Original specific routes are kept for any other potential use
+router.get('/healths/specialty/:specialty', getHealthServicesBySpecialty);
+router.get('/healths/emergency', getEmergencyServices);
 
 module.exports = router;
