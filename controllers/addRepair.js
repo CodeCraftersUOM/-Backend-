@@ -2,32 +2,49 @@ const VehicleRepairService = require("../models/repairModel");
 
 const createVehicleRepairService = async (req, res) => {
   try {
-    const serviceData = req.body;
+    const repairData = req.body;
 
-    // Create new vehicle repair service document
-    const newService = new VehicleRepairService({
-      ...serviceData,
+    // Check for duplicate email or business name
+    const existingRepair = await VehicleRepairService.findOne({
+      $or: [
+        { businessEmailAddress: repairData.businessEmailAddress },
+        { businessName: repairData.businessName }
+      ]
     });
 
+    if (existingRepair) {
+      const duplicateField = existingRepair.businessEmailAddress === repairData.businessEmailAddress ? 'email' : 'business name';
+      return res.status(409).json({
+        success: false,
+        message: `Vehicle repair business with this ${duplicateField} already exists`,
+        duplicateField: duplicateField
+      });
+    }
+
+    // Create new vehicle repair document
+    const newRepair = new VehicleRepairService(repairData);
+
     // Save to database
-    const savedService = await newService.save();
+    const savedRepair = await newRepair.save();
 
     res.status(201).json({
       success: true,
-      data: savedService,
+      message: 'Vehicle repair business registered successfully',
+      data: savedRepair,
     });
   } catch (error) {
-    console.error("Error creating vehicle repair service:", error);
+    console.error("Error creating vehicle repair business:", error);
 
     if (error.name === "ValidationError") {
-      const errors = {};
-      for (let field in error.errors) {
-        errors[field] = error.errors[field].message;
-      }
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
       return res.status(400).json({
         success: false,
-        error: "Validation Failed",
-        details: errors,
+        message: 'Validation failed',
+        errors: validationErrors
       });
     }
 
@@ -35,13 +52,15 @@ const createVehicleRepairService = async (req, res) => {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
         success: false,
-        error: `${field} already exists`,
+        message: `${field} already exists`,
+        duplicateField: field
       });
     }
 
     res.status(500).json({
       success: false,
-      error: "Server error",
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -49,7 +68,7 @@ const createVehicleRepairService = async (req, res) => {
 // Get all repair services
 const getRepairServices = async (req, res) => {
   try {
-    const repairServices = await VehicleRepairService.find({ status: "active" })
+    const repairServices = await VehicleRepairService.find({})
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -60,7 +79,7 @@ const getRepairServices = async (req, res) => {
     console.error("Error fetching repair services:", error);
     res.status(500).json({
       success: false,
-      error: "Server error",
+      message: 'Internal server error'
     });
   }
 };
@@ -74,7 +93,7 @@ const getRepairServiceById = async (req, res) => {
     if (!repairService) {
       return res.status(404).json({
         success: false,
-        error: "Repair service not found",
+        message: 'Repair service not found',
       });
     }
 
@@ -86,58 +105,33 @@ const getRepairServiceById = async (req, res) => {
     console.error("Error fetching repair service by ID:", error);
     res.status(500).json({
       success: false,
-      error: "Server error",
+      message: 'Internal server error'
     });
   }
 };
 
-// Search and filter repair services (CHANGED to read from req.body)
+// Search and filter repair services
 const searchRepairServices = async (req, res) => {
   try {
-    const {
-      query,
-      minCost,
-      maxCost,
-      minRating,
-      location,
-      serviceType,
-      vehicleType,
-      services,
-    } = req.body; // CHANGED from req.query to req.body
+    const { query, services, location } = req.body;
 
-    let filter = { status: "active" };
+    let filter = {};
 
-    // Text search for name and description
     if (query) {
       filter.$or = [
-        { serviceName: { $regex: query, $options: "i" } },
-        { serviceDescription: { $regex: query, $options: "i" } },
+        { businessName: { $regex: query, $options: "i" } },
+        { businessDescription: { $regex: query, $options: "i" } },
+        { ownerFullName: { $regex: query, $options: "i" } }
       ];
     }
-    
-    // Location search
+
+    if (services && services.length > 0) {
+      filter.servicesOffered = { $in: services };
+    }
+
     if (location) {
       filter.locationAddress = { $regex: location, $options: "i" };
     }
-
-    // Service type filter
-    if (serviceType) {
-      filter.serviceType = serviceType;
-    }
-
-    // Cost range filter
-    if (minCost != null || maxCost != null) {
-      filter.averageServiceCost = {};
-      if (minCost != null) filter.averageServiceCost.$gte = minCost;
-      if (maxCost != null) filter.averageServiceCost.$lte = maxCost;
-    }
-
-    // Minimum rating filter
-    if (minRating != null) {
-      filter.rating = { $gte: minRating };
-    }
-    
-    // ... (other filters can be added here) ...
 
     const repairServices = await VehicleRepairService.find(filter);
 
@@ -149,18 +143,14 @@ const searchRepairServices = async (req, res) => {
     console.error("Error searching repair services:", error);
     res.status(500).json({
       success: false,
-      error: "Server error during search",
+      message: 'Server error during search'
     });
   }
 };
-
-// ... (update and delete functions remain the same) ...
 
 module.exports = {
   createVehicleRepairService,
   getRepairServices,
   getRepairServiceById,
   searchRepairServices,
-  // updateRepairService, (if you need it)
-  // deleteRepairService, (if you need it)
-};
+}; 

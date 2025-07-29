@@ -1,33 +1,34 @@
-const HealthService = require('../models/healthModel');
+const Doctor = require('../models/healthModel');
 
-// Create a new health service (Original function preserved)
-const createHealthService = async (req, res) => {
+// Create a new doctor registration
+const createDoctor = async (req, res) => {
   try {
-    const healthData = req.body;
+    const doctorData = req.body;
     
-    const existingService = await HealthService.findOne({
+    // Check for duplicate email or license number
+    const existingDoctor = await Doctor.findOne({
       $or: [
-        { contactEmail: healthData.contactEmail },
-        ...(healthData.registrationNumber ? [{ registrationNumber: healthData.registrationNumber }] : [])
+        { email: doctorData.email },
+        { licenseNumber: doctorData.licenseNumber }
       ]
     });
     
-    if (existingService) {
-      const duplicateField = existingService.contactEmail === healthData.contactEmail ? 'email' : 'registration number';
+    if (existingDoctor) {
+      const duplicateField = existingDoctor.email === doctorData.email ? 'email' : 'license number';
       return res.status(409).json({
         success: false,
-        message: `Health service with this ${duplicateField} already exists`,
+        message: `Doctor with this ${duplicateField} already exists`,
         duplicateField: duplicateField
       });
     }
     
-    const newHealthService = new HealthService(healthData);
-    const savedHealthService = await newHealthService.save();
+    const newDoctor = new Doctor(doctorData);
+    const savedDoctor = await newDoctor.save();
     
     res.status(201).json({
       success: true,
-      message: 'Health service created successfully',
-      data: savedHealthService,
+      message: 'Doctor registered successfully',
+      data: savedDoctor,
     });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -42,36 +43,36 @@ const createHealthService = async (req, res) => {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({ success: false, message: `${field} already exists`, duplicateField: field });
     }
-    console.error('Error creating health service:', error);
+    console.error('Error creating doctor:', error);
     res.status(500).json({ success: false, message: 'Internal server error', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
-// Update health service (Original function preserved)
-const updateHealthService = async (req, res) => {
+// Update doctor
+const updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
     
-    const existingService = await HealthService.findById(id);
-    if (!existingService) {
-      return res.status(404).json({ success: false, message: 'Health service not found' });
+    const existingDoctor = await Doctor.findById(id);
+    if (!existingDoctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
     
-    if (updateData.contactEmail || updateData.registrationNumber) {
+    if (updateData.email || updateData.licenseNumber) {
       const duplicateQuery = { _id: { $ne: id }, $or: [] };
-      if (updateData.contactEmail) duplicateQuery.$or.push({ contactEmail: updateData.contactEmail });
-      if (updateData.registrationNumber) duplicateQuery.$or.push({ registrationNumber: updateData.registrationNumber });
+      if (updateData.email) duplicateQuery.$or.push({ email: updateData.email });
+      if (updateData.licenseNumber) duplicateQuery.$or.push({ licenseNumber: updateData.licenseNumber });
       
-      const duplicateService = await HealthService.findOne(duplicateQuery);
-      if (duplicateService) {
-        const duplicateField = duplicateService.contactEmail === updateData.contactEmail ? 'email' : 'registration number';
-        return res.status(409).json({ success: false, message: `Health service with this ${duplicateField} already exists`, duplicateField: duplicateField });
+      const duplicateDoctor = await Doctor.findOne(duplicateQuery);
+      if (duplicateDoctor) {
+        const duplicateField = duplicateDoctor.email === updateData.email ? 'email' : 'license number';
+        return res.status(409).json({ success: false, message: `Doctor with this ${duplicateField} already exists`, duplicateField: duplicateField });
       }
     }
     
-    const updatedService = await HealthService.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
-    res.json({ success: true, message: 'Health service updated successfully', data: updatedService });
+    const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+    res.json({ success: true, message: 'Doctor updated successfully', data: updatedDoctor });
   } catch (error) {
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => ({ field: err.path, message: err.message, value: err.value }));
@@ -81,116 +82,122 @@ const updateHealthService = async (req, res) => {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({ success: false, message: `${field} already exists`, duplicateField: field });
     }
-    console.error('Error updating health service:', error);
+    console.error('Error updating doctor:', error);
     res.status(500).json({ success: false, message: 'Internal server error', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
-// Get single health service (Original function preserved)
-const getHealthService = async (req, res) => {
+// Get single doctor
+const getDoctor = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await HealthService.findById(id);
-    if (!service) {
-      return res.status(404).json({ success: false, message: 'Health service not found' });
+    const doctor = await Doctor.findById(id);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
-    res.json({ success: true, data: service });
+    res.json({ success: true, data: doctor });
   } catch (error) {
-    console.error('Error fetching health service:', error);
+    console.error('Error fetching doctor:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
-// Get all health services (MODIFIED to remove pagination)
-const getAllHealthServices = async (req, res) => {
+// Get all doctors
+const getAllDoctors = async (req, res) => {
   try {
-    const services = await HealthService.find({}).sort({ createdAt: -1 });
+    const doctors = await Doctor.find({}).sort({ createdAt: -1 });
     res.json({
       success: true,
-      data: services,
+      data: doctors,
     });
   } catch (error) {
-    console.error('Error fetching health services:', error);
+    console.error('Error fetching doctors:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
-// Delete health service (Original function preserved)
-const deleteHealthService = async (req, res) => {
+// Delete doctor
+const deleteDoctor = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedService = await HealthService.findByIdAndDelete(id);
-    if (!deletedService) {
-      return res.status(404).json({ success: false, message: 'Health service not found' });
+    const deletedDoctor = await Doctor.findByIdAndDelete(id);
+    if (!deletedDoctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
-    res.json({ success: true, message: 'Health service deleted successfully', data: deletedService });
+    res.json({ success: true, message: 'Doctor deleted successfully', data: deletedDoctor });
   } catch (error) {
-    console.error('Error deleting health service:', error);
+    console.error('Error deleting doctor:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
-// NEW: Search function added to match accommodation feature
-const searchHealthServices = async (req, res) => {
+// Search doctors
+const searchDoctors = async (req, res) => {
     try {
-        const { query, serviceType, specialty, emergencyAvailable } = req.body;
+        const { query, specialty, state, city } = req.body;
         let filter = {};
 
         if (query) {
             filter.$or = [
-                { facilityName: { $regex: query, $options: "i" } },
-                { 'doctors.fullName': { $regex: query, $options: "i" } },
-                { 'doctors.specialty': { $regex: query, $options: "i" } },
+                { fullName: { $regex: query, $options: "i" } },
+                { specialty: { $regex: query, $options: "i" } },
+                { medicalSchool: { $regex: query, $options: "i" } },
             ];
         }
-        if (serviceType) {
-            filter.serviceType = serviceType;
-        }
         if (specialty) {
-            filter.specialties = { $in: [specialty] };
+            filter.specialty = specialty;
         }
-        if (emergencyAvailable !== undefined) {
-            filter['workingHours.emergencyAvailable'] = emergencyAvailable === true;
+        if (state) {
+            filter.state = state;
+        }
+        if (city) {
+            filter.city = { $regex: city, $options: "i" };
         }
 
-        const services = await HealthService.find(filter);
-        res.status(200).json({ success: true, data: services });
+        const doctors = await Doctor.find(filter);
+        res.status(200).json({ success: true, data: doctors });
 
     } catch (error) {
-        console.error("Error searching health services:", error);
+        console.error("Error searching doctors:", error);
         res.status(500).json({ success: false, error: "Server error during search" });
     }
 };
 
-// Original functions getHealthServicesBySpecialty and getEmergencyServices are kept for any other potential use
-const getHealthServicesBySpecialty = async (req, res) => {
+// Get doctors by specialty
+const getDoctorsBySpecialty = async (req, res) => {
   try {
     const { specialty } = req.params;
-    const services = await HealthService.find({ specialties: { $in: [specialty] } });
-    res.json({ success: true, data: services });
+    const doctors = await Doctor.find({ specialty: specialty });
+    res.json({ success: true, data: doctors });
   } catch (error) {
-    console.error('Error fetching health services by specialty:', error);
+    console.error('Error fetching doctors by specialty:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
-const getEmergencyServices = async (req, res) => {
+// Get doctors by location
+const getDoctorsByLocation = async (req, res) => {
   try {
-    const services = await HealthService.find({ 'workingHours.emergencyAvailable': true });
-    res.json({ success: true, data: services });
+    const { state, city } = req.params;
+    let filter = {};
+    if (state) filter.state = state;
+    if (city) filter.city = { $regex: city, $options: "i" };
+    
+    const doctors = await Doctor.find(filter);
+    res.json({ success: true, data: doctors });
   } catch (error) {
-    console.error('Error fetching emergency services:', error);
+    console.error('Error fetching doctors by location:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
 module.exports = {
-  createHealthService,
-  updateHealthService,
-  getHealthService,
-  getAllHealthServices,
-  deleteHealthService,
-  getHealthServicesBySpecialty,
-  getEmergencyServices,
-  searchHealthServices // Added new search function
+  createDoctor,
+  updateDoctor,
+  getDoctor,
+  getAllDoctors,
+  deleteDoctor,
+  getDoctorsBySpecialty,
+  getDoctorsByLocation,
+  searchDoctors
 };

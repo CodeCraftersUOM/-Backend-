@@ -1,43 +1,49 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createHealthService,
-  updateHealthService,
-  getHealthService,
-  getAllHealthServices,
-  deleteHealthService,
-  getHealthServicesBySpecialty,
-  getEmergencyServices,
-  searchHealthServices // Import the new search function
+  createDoctor,
+  updateDoctor,
+  getDoctor,
+  getAllDoctors,
+  deleteDoctor,
+  getDoctorsBySpecialty,
+  getDoctorsByLocation,
+  searchDoctors
 } = require('../controllers/addhealth');
 
 // Note: Your validation middleware can be added back here if needed.
-// const { validateHealthServiceCreation, validateHealthServiceUpdate } = require('../validation/healthValidation');
+// const { validateDoctorCreation, validateDoctorUpdate } = require('../validation/healthValidation');
 // const { handleValidationErrors } = require('../validation/validationErrorHandler');
 
-// Standardized routes to match other features
-const baseRoute = '/health-services';
+// Doctor registration endpoint (matches your frontend API call)
+router.post('/addHelth', createDoctor);
 
-// Create health service
-router.post(baseRoute, createHealthService);
+// Standardized routes for doctor management
+const baseRoute = '/doctors';
 
-// Get all health services
-router.get(baseRoute, getAllHealthServices);
+// Create doctor
+router.post(baseRoute, createDoctor);
 
-// Search for health services (NEW - using POST)
-router.post(`${baseRoute}/search`, searchHealthServices);
+// Get all doctors
+router.get(baseRoute, getAllDoctors);
 
-// Get single health service by ID
-router.get(`${baseRoute}/:id`, getHealthService);
+// Search for doctors
+router.post(`${baseRoute}/search`, searchDoctors);
 
-// Update health service
-router.put(`${baseRoute}/:id`, updateHealthService);
+// Get single doctor by ID
+router.get(`${baseRoute}/:id`, getDoctor);
 
-// Delete health service
-router.delete(`${baseRoute}/:id`, deleteHealthService);
+// Update doctor
+router.put(`${baseRoute}/:id`, updateDoctor);
 
-// Original specific routes are kept for any other potential use
-router.get('/healths/specialty/:specialty', getHealthServicesBySpecialty);
-router.get('/healths/emergency', getEmergencyServices);
+// Delete doctor
+router.delete(`${baseRoute}/:id`, deleteDoctor);
+
+// Get doctors by specialty
+router.get('/doctors/specialty/:specialty', getDoctorsBySpecialty);
+
+// Get doctors by location (fixed - removed optional parameter)
+router.get('/doctors/location/:state', getDoctorsByLocation);
+router.get('/doctors/location/:state/:city', getDoctorsByLocation);
 
 module.exports = router;
