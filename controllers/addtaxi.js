@@ -60,7 +60,20 @@ const buildFilter = (query) => {
 const createTaxiDriver = async (req, res) => {
   try {
     const driverData = req.body;
-    const newDriver = new TaxiDriver(driverData);
+    
+    // Convert string fields to appropriate types
+    const processedData = {
+      ...driverData,
+      yearsOfExperience: driverData.yearsOfExperience ? parseInt(driverData.yearsOfExperience) : 0,
+      seatingCapacity: driverData.seatingCapacity ? parseInt(driverData.seatingCapacity) : 0,
+      licenseExpiryDate: driverData.licenseExpiryDate ? new Date(driverData.licenseExpiryDate) : null,
+      availableDays: driverData.availableDays || [],
+      vehicleImages: driverData.vehicleImages || [],
+      // Map drivingLicenseCardNumber to cnic if needed
+      cnic: driverData.drivingLicenseCardNumber || driverData.cnic,
+    };
+    
+    const newDriver = new TaxiDriver(processedData);
     const savedDriver = await newDriver.save();
 
     res.status(201).json({
@@ -88,13 +101,20 @@ const createTaxiDriver = async (req, res) => {
 const createTaxiService = async (req, res) => {
   try {
     const driverData = req.body;
-    const newDriver = new TaxiDriver({
+    
+    // Convert string fields to appropriate types
+    const processedData = {
       ...driverData,
+      yearsOfExperience: driverData.yearsOfExperience ? parseInt(driverData.yearsOfExperience) : 0,
+      seatingCapacity: driverData.seatingCapacity ? parseInt(driverData.seatingCapacity) : 0,
       licenseExpiryDate: driverData.licenseExpiryDate ? new Date(driverData.licenseExpiryDate) : null,
       availableDays: driverData.availableDays || [],
       vehicleImages: driverData.vehicleImages || [],
-    });
+      // Map drivingLicenseCardNumber to cnic if needed
+      cnic: driverData.drivingLicenseCardNumber || driverData.cnic,
+    };
     
+    const newDriver = new TaxiDriver(processedData);
     const savedDriver = await newDriver.save();
     res.status(201).json({ success: true, data: savedDriver });
   } catch (error) {

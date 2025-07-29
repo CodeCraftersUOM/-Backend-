@@ -86,6 +86,6 @@ const commonServiceSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const CommonService = mongoose.models.CommonService || mongoose.model('CommonService', commonServiceSchema);
+const CommonService = mongoose.models.CommonService || mongoose.model('CommonService', commonServiceSchema, 'commonservices');
 
 module.exports = CommonService;

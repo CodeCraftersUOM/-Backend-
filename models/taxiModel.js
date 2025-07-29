@@ -8,6 +8,11 @@ const taxiDriverSchema = new mongoose.Schema({
   },
   cnic: {
     type: String,
+    trim: true,
+    // Made optional since frontend doesn't send this
+  },
+  drivingLicenseCardNumber: {
+    type: String,
     required: true,
     trim: true,
     unique: true, // To avoid duplicate entries

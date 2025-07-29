@@ -3,14 +3,56 @@ const CommonService = require('../models/otherModel');
 // Create a new common service
 const createCommonService = async (req, res) => {
   try {
+    console.log('Received request body:', req.body);
     const serviceData = req.body;
-    const newService = new CommonService(serviceData);
+    
+    // Transform the data to match the model structure
+    const transformedData = {
+      fullNameOrBusinessName: serviceData.fullNameOrBusinessName,
+      ownerName: serviceData.ownerName,
+      cnicOrNationalId: serviceData.cnicOrNationalId,
+      businessRegistrationNumber: serviceData.businessRegistrationNumber,
+      primaryPhoneNumber: serviceData.primaryPhoneNumber,
+      alternatePhoneNumber: serviceData.alternatePhoneNumber,
+      emailAddress: serviceData.emailAddress,
+      whatsappNumber: serviceData.whatsappNumber,
+      websiteUrl: serviceData.websiteUrl,
+      typeOfService: serviceData.typeOfService,
+      listOfServicesOffered: serviceData.listOfServicesOffered,
+      pricingMethod: serviceData.pricingMethod,
+      yearsOfExperience: serviceData.yearsOfExperience,
+      availability: serviceData.availability,
+      termsAgreed: serviceData.termsAgreed
+    };
+    
+    console.log('Transformed data:', transformedData);
+    
+    const newService = new CommonService(transformedData);
+    console.log('Model instance created');
+    
     const savedService = await newService.save();
+    console.log('Service saved successfully:', savedService._id);
+    
     res.status(201).json({
       success: true,
+      message: 'Service registered successfully',
       data: savedService,
     });
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+    
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(400).json({ success: false, error: `${field} already exists` });
@@ -23,7 +65,9 @@ const createCommonService = async (req, res) => {
 // Get all common services
 const getAllCommonServices = async (req, res) => {
     try {
+        console.log('Fetching all common services...');
         const services = await CommonService.find({});
+        console.log(`Found ${services.length} services`);
         res.status(200).json({ success: true, data: services });
     } catch (error) {
         console.error('Error fetching services:', error);

@@ -14,6 +14,9 @@ const {
 // Your original route - keeping it for backward compatibility
 router.post('/addTAxi', createTaxiDriver);
 
+// Frontend is calling this endpoint - adding it
+router.post('/addTaxiDriver', createTaxiDriver);
+
 // New routes matching accommodation pattern
 router.post('/addTaxi', createTaxiService);
 router.get('/taxis', getTaxiDrivers);

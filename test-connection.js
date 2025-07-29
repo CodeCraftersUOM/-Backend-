@@ -1,29 +1,46 @@
 const mongoose = require('mongoose');
+const CommonService = require('./models/otherModel');
 
-const testConnection = async () => {
-  const uri = "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/TravelWish";
-  
+const uri = "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/service-provider?retryWrites=true&w=majority&appName=Cluster0";
+
+async function testConnection() {
   try {
-    console.log('🔄 Testing MongoDB connection...');
+    console.log('Testing MongoDB connection...');
     await mongoose.connect(uri);
-    console.log('✅ MongoDB connection successful!');
+    console.log('✅ Connected to MongoDB successfully');
     
-    // Test a simple operation
+    // Test the model
+    console.log('Testing CommonService model...');
+    const testService = new CommonService({
+      fullNameOrBusinessName: "Test Business",
+      primaryPhoneNumber: "0771234567",
+      emailAddress: "test@example.com",
+      typeOfService: "Cleaning Services",
+      listOfServicesOffered: ["House Cleaning"],
+      pricingMethod: "Per Hour",
+      availability: {
+        availableDays: ["Monday"],
+        availableTimeSlots: "9:00 AM - 6:00 PM"
+      },
+      termsAgreed: true
+    });
+    
+    console.log('✅ Model created successfully');
+    console.log('Model schema:', testService.schema.obj);
+    
+    // List all collections
     const collections = await mongoose.connection.db.listCollections().toArray();
-    console.log('📋 Available collections:', collections.map(c => c.name));
+    console.log('Available collections:', collections.map(c => c.name));
     
     await mongoose.disconnect();
-    console.log('🔌 Disconnected successfully');
+    console.log('✅ Disconnected from MongoDB');
+    
   } catch (error) {
-    console.error('❌ Connection failed:', error.message);
-    console.log('\n🔧 Troubleshooting steps:');
-    console.log('1. Check your internet connection');
-    console.log('2. Verify MongoDB Atlas cluster is running');
-    console.log('3. Check IP whitelist (add 0.0.0.0/0 for testing)');
-    console.log('4. Verify username/password in connection string');
+    console.error('❌ Error:', error.message);
+    if (error.name === 'ValidationError') {
+      console.error('Validation errors:', error.errors);
+    }
   }
-  
-  process.exit(0);
-};
+}
 
 testConnection();

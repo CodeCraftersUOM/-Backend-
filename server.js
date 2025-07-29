@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 const uri =
-  "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  "mongodb+srv://chandupa:81945124@cluster0.fmyrf.mongodb.net/service-provider?retryWrites=true&w=majority&appName=Cluster0";
 
 const connect = async () => {
   try {

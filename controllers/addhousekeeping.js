@@ -4,7 +4,32 @@ const HousekeepingLaundryService = require('../models/housekeepingModel');
 const createHousekeepingLaundryService = async (req, res) => {
   try {
     const serviceData = req.body;
-    const newService = new HousekeepingLaundryService({ ...serviceData });
+    
+    // Transform flat data structure to nested structure expected by model
+    const transformedData = {
+      businessName: serviceData.businessName,
+      ownerFullName: serviceData.ownerFullName,
+      contactPhone: serviceData.contactPhone,
+      contactEmail: serviceData.contactEmail,
+      alternatePhone: serviceData.alternatePhone,
+      websiteUrl: serviceData.websiteUrl,
+      businessDescription: serviceData.businessDescription,
+      serviceTypes: serviceData.serviceTypes,
+      pricingMethod: serviceData.pricingMethod,
+      serviceArea: serviceData.serviceArea,
+      addressOrLandmark: serviceData.addressOrLandmark,
+      googleMapsLink: serviceData.googleMapsLink,
+      availability: {
+        daysAvailable: serviceData.daysAvailable,
+        timeSlot: serviceData.timeSlot,
+        emergencyServiceAvailable: serviceData.emergencyServiceAvailable
+      },
+      businessRegistrationNumber: serviceData.businessRegistrationNumber,
+      licensesCertificates: serviceData.licensesCertificates ? [serviceData.licensesCertificates] : [],
+      termsAgreed: serviceData.termsAgreed
+    };
+
+    const newService = new HousekeepingLaundryService(transformedData);
     const savedService = await newService.save();
     res.status(201).json({ success: true, data: savedService });
   } catch (error) {

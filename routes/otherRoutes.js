@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const otherController = require('../controllers/addother');
+const { validateOtherServiceCreation, handleValidationErrors } = require('../validation/othervalidation');
 
 const baseRoute = '/other-services';
 
