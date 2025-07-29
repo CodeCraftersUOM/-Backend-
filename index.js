@@ -92,8 +92,8 @@ app.use("/api/old", loginRouter); // Mount on /api/old to avoid conflict
 // ✅ Additional routes from original index.js
 app.use("/api", require("./routes/authenticationRoute"));
 app.use("/api", require("./routes/guideRoutes"));
-app.use("/api", require("./routes/communiRoutes"));
-app.use("/api", require("./routes/repairRoutes"));
+app.use("/api", require("./routes/communicationServiceRoutes"));
+app.use("/api", require("./routes/vehicleRepairServiceRoutes"));
 app.use("/api", require("./routes/resturentRoutes"));
 app.use("/api", require("./routes/healthRoutes"));
 app.use("/api", require("./routes/houeskeepingRoutes"));
