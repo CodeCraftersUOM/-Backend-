@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        input, button { margin: 5px 0; padding: 10px; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        .stripe-card { padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin: 5px 0; }
+    </style>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>Payment System Test</h1>
+    
+    <!-- Login Section -->
+    <div class="section">
+        <h2>1. Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email" value="a@gmail.com">
+        <input type="password" id="loginPassword" placeholder="Password" value="your-password">
+        <button onclick="login()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- Payment Test Section -->
+    <div class="section">
+        <h2>2. Test Payment (Rs. 24,000)</h2>
+        <input type="text" id="cardholderName" placeholder="Cardholder Name" value="John Doe">
+        <div class="stripe-card" id="card-number"></div>
+        <div style="display: flex; gap: 10px;">
+            <div class="stripe-card" id="card-expiry" style="flex: 1;"></div>
+            <div class="stripe-card" id="card-cvc" style="flex: 1;"></div>
+        </div>
+        <label>
+            <input type="checkbox" id="saveCard"> Save card for future payments
+        </label>
+        <button onclick="processPayment()">Pay Rs. 24,000.00</button>
+        <div id="paymentResult"></div>
+    </div>
+
+    <!-- Saved Cards Section -->
+    <div class="section">
+        <h2>3. Saved Cards</h2>
+        <button onclick="fetchSavedCards()">Get My Saved Cards</button>
+        <div id="savedCardsResult"></div>
+    </div>
+
+    <!-- Payment History Section -->
+    <div class="section">
+        <h2>4. Payment History</h2>
+        <button onclick="getPaymentHistory()">Get Payment History</button>
+        <div id="historyResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:2000/api';
+        
+        // Initialize Stripe
+        const stripe = Stripe('pk_test_your_stripe_publishable_key_here'); // Replace with your actual key
+        const elements = stripe.elements();
+        
+        // Create card elements
+        const cardNumber = elements.create('cardNumber');
+        const cardExpiry = elements.create('cardExpiry');
+        const cardCvc = elements.create('cardCvc');
+        
+        // Mount elements
+        cardNumber.mount('#card-number');
+        cardExpiry.mount('#card-expiry');
+        cardCvc.mount('#card-cvc');
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Login successful: ${data.user.email}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function processPayment() {
+            const resultDiv = document.getElementById('paymentResult');
+            const cardholderName = document.getElementById('cardholderName').value;
+            const saveCard = document.getElementById('saveCard').checked;
+            
+            try {
+                resultDiv.innerHTML = '<div class="info">⏳ Creating payment intent...</div>';
+                
+                // Create payment intent
+                const intentResponse = await fetch(`${API_BASE}/payments/create-intent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        amount: 24000,
+                        currency: 'lkr',
+                        saveCard: saveCard
+                    })
+                });
+                
+                if (!intentResponse.ok) {
+                    const errorData = await intentResponse.json();
+                    throw new Error(errorData.message || 'Failed to create payment intent');
+                }
+                
+                const { clientSecret } = await intentResponse.json();
+                
+                resultDiv.innerHTML = '<div class="info">⏳ Processing payment...</div>';
+                
+                // Confirm payment
+                const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardNumber,
+                        billing_details: {
+                            name: cardholderName,
+                        },
+                    }
+                });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Payment failed: ${error.message}</div>`;
+                } else if (paymentIntent.status === 'succeeded') {
+                    resultDiv.innerHTML = `<div class="success">✅ Payment successful! Amount: Rs. ${paymentIntent.amount / 100}</div>`;
+                    
+                    // Refresh saved cards if card was saved
+                    if (saveCard) {
+                        setTimeout(fetchSavedCards, 1000);
+                    }
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchSavedCards() {
+            const resultDiv = document.getElementById('savedCardsResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/cards`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const cardsHtml = data.cards.map(card => 
+                        `<div>💳 ${card.cardHolderName} - ${card.cardNumber} (Expires: ${card.expiryDate})</div>`
+                    ).join('');
+                    resultDiv.innerHTML = `<div class="success">✅ Found ${data.count} cards:</div>${cardsHtml}`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to get cards: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function getPaymentHistory() {
+            const resultDiv = document.getElementById('historyResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/payments/history`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const paymentsHtml = data.payments.map(payment => 
+                        `<div>💰 Rs. ${payment.amount} - ${payment.status} - ${new Date(payment.created).toLocaleDateString()}</div>`
+                    ).join('');
+                    resultDiv.innerHTML = `<div class="success">✅ Payment History:</div>${paymentsHtml}`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to get history: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Card Saving Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .auth-section {
+            background-color: #e3f2fd;
+        }
+        .payment-section {
+            background-color: #f3e5f5;
+        }
+        .saved-cards-section {
+            background-color: #e8f5e8;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input, select {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .card-element {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .saved-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .checkbox-container {
+            margin: 15px 0;
+            padding: 10px;
+            background: #fff9c4;
+            border-radius: 6px;
+            border: 1px solid #f7e633;
+        }
+        .step-number {
+            background: #007cba;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fixed Card Saving & Payment Test</h1>
+        
+        <div class="warning result">
+⚠️ IMPORTANT INFORMATION:
+
+The error "Card is not configured for payments" happens because:
+1. Cards saved via the /api/cards endpoint (old method) don't have Stripe payment method IDs
+2. Only cards saved DURING payment confirmation have proper Stripe integration
+
+SOLUTION: Use the payment process below with "Save card" checked to create properly integrated cards.
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="section auth-section">
+            <h2><span class="step-number">1</span>Authentication</h2>
+            <div>
+                <input type="email" id="email" placeholder="Email" value="test@example.com">
+                <input type="password" id="password" placeholder="Password" value="password123">
+                <button onclick="login()">Login</button>
+                <button onclick="register()">Register</button>
+            </div>
+            <div id="authResult" class="result info" style="display:none;"></div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="section payment-section">
+            <h2><span class="step-number">2</span>Make Payment & Save Card (Proper Method)</h2>
+            <div>
+                <input type="number" id="amount" placeholder="Amount" value="100" min="1">
+                <select id="currency">
+                    <option value="lkr">LKR</option>
+                    <option value="usd">USD</option>
+                </select>
+            </div>
+            
+            <div class="checkbox-container">
+                <label>
+                    <input type="checkbox" id="saveCard" checked>
+                    <strong>💾 Save card for future payments</strong>
+                    <br><small>This creates a properly integrated saved card with Stripe payment method ID</small>
+                </label>
+            </div>
+
+            <div>
+                <input type="text" id="cardHolderName" placeholder="Card Holder Name" value="John Doe">
+            </div>
+            
+            <div id="card-element" class="card-element">
+                <!-- Stripe Elements will create form elements here -->
+            </div>
+            
+            <button onclick="createPayment()" id="payButton">Create Payment Intent</button>
+            <button onclick="confirmPayment()" id="confirmButton" disabled>Confirm Payment</button>
+            
+            <div id="paymentResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Saved Cards Section -->
+        <div class="section saved-cards-section">
+            <h2><span class="step-number">3</span>Saved Cards & Payment Testing</h2>
+            <button onclick="loadSavedCards()">🔄 Load Saved Cards</button>
+            <button onclick="checkCardDatabase()">🔍 Check Card Database Status</button>
+            
+            <div id="savedCardsContainer"></div>
+            <div id="savedCardResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const stripe = Stripe('pk_test_your_stripe_publishable_key_here'); // Replace with your actual Stripe publishable key
+        let elements, cardElement, clientSecret, paymentIntentId, authToken;
+        const API_BASE = 'http://localhost:2000';
+
+        // Initialize Stripe Elements
+        function initializeStripe() {
+            elements = stripe.elements();
+            cardElement = elements.create('card');
+            cardElement.mount('#card-element');
+        }
+
+        // Authentication functions
+        async function login() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    showResult('authResult', `✅ Login successful!\nToken: ${authToken.substring(0, 20)}...`, 'success');
+                    loadSavedCards(); // Auto-load saved cards after login
+                } else {
+                    showResult('authResult', `❌ Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('authResult', `❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function register() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fullName: "Test User",
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value,
+                        confirmPassword: document.getElementById('password').value,
+                        phoneNumber: "1234567890"
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('authResult', `✅ Registration successful!\nMessage: ${data.message}`, 'success');
+                } else {
+                    showResult('authResult', `❌ Registration failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('authResult', `❌ Registration error: ${error.message}`, 'error');
+            }
+        }
+
+        // Payment functions
+        async function createPayment() {
+            if (!authToken) {
+                showResult('paymentResult', '❌ Please login first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/payments/create-payment-intent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        amount: parseFloat(document.getElementById('amount').value),
+                        currency: document.getElementById('currency').value,
+                        saveCard: document.getElementById('saveCard').checked
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    clientSecret = data.clientSecret;
+                    paymentIntentId = data.paymentIntentId;
+                    document.getElementById('confirmButton').disabled = false;
+                    showResult('paymentResult', `✅ Payment Intent created!\nID: ${paymentIntentId}\nAmount: ${data.amount} ${data.currency.toUpperCase()}`, 'success');
+                } else {
+                    showResult('paymentResult', `❌ Failed to create payment: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('paymentResult', `❌ Payment creation error: ${error.message}`, 'error');
+            }
+        }
+
+        async function confirmPayment() {
+            if (!clientSecret || !authToken) {
+                showResult('paymentResult', '❌ Please create payment intent first', 'error');
+                return;
+            }
+
+            try {
+                // Confirm payment with Stripe
+                const {error, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: document.getElementById('cardHolderName').value,
+                        },
+                    }
+                });
+
+                if (error) {
+                    showResult('paymentResult', `❌ Payment failed: ${error.message}`, 'error');
+                    return;
+                }
+
+                console.log('💳 Payment confirmed with Stripe:', paymentIntent);
+
+                // Confirm with our backend and save card if requested
+                const response = await fetch(`${API_BASE}/api/payments/confirm-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentIntent.id,
+                        paymentMethodId: paymentIntent.payment_method,
+                        saveCard: document.getElementById('saveCard').checked,
+                        cardDetails: {
+                            cardHolderName: document.getElementById('cardHolderName').value
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    let resultMessage = `✅ Payment confirmed successfully!\nPayment ID: ${data.paymentIntent.id}\nStatus: ${data.paymentIntent.status}\nAmount: ${data.paymentIntent.amount} ${data.paymentIntent.currency.toUpperCase()}`;
+                    
+                    if (data.savedCard) {
+                        resultMessage += `\n\n💾 Card saved successfully!\nCard ID: ${data.savedCard.id}\nHolder: ${data.savedCard.cardHolderName}\nNumber: ${data.savedCard.cardNumber}\nExpiry: ${data.savedCard.expiryDate}`;
+                        
+                        // Auto-reload saved cards to show the new one
+                        setTimeout(() => loadSavedCards(), 1000);
+                    }
+                    
+                    showResult('paymentResult', resultMessage, 'success');
+                    
+                    // Reset form
+                    document.getElementById('confirmButton').disabled = true;
+                    clientSecret = null;
+                    paymentIntentId = null;
+                } else {
+                    showResult('paymentResult', `❌ Payment confirmation failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('paymentResult', `❌ Payment confirmation error: ${error.message}`, 'error');
+            }
+        }
+
+        // Saved cards functions
+        async function loadSavedCards() {
+            if (!authToken) {
+                showResult('savedCardResult', '❌ Please login first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/cards`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySavedCards(data.cards);
+                    showResult('savedCardResult', `✅ Loaded ${data.cards.length} saved card(s)`, 'success');
+                } else {
+                    showResult('savedCardResult', `❌ Failed to load cards: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('savedCardResult', `❌ Error loading cards: ${error.message}`, 'error');
+            }
+        }
+
+        function displaySavedCards(cards) {
+            const container = document.getElementById('savedCardsContainer');
+            
+            if (cards.length === 0) {
+                container.innerHTML = '<div class="info result">No saved cards found. Save a card using the payment process above.</div>';
+                return;
+            }
+
+            container.innerHTML = cards.map(card => `
+                <div class="saved-card">
+                    <h4>💳 ${card.cardHolderName}</h4>
+                    <p><strong>Card:</strong> ${card.cardNumber}</p>
+                    <p><strong>Expiry:</strong> ${card.expiryDate}</p>
+                    <p><strong>Has Stripe Integration:</strong> ${card.stripePaymentMethodId ? '✅ YES' : '❌ NO (Old Format)'}</p>
+                    
+                    <div>
+                        <input type="number" id="amount_${card._id}" placeholder="Amount" value="50" min="1" style="width: 100px;">
+                        <button onclick="payWithSavedCard('${card._id}', '${card.cardHolderName}', '${card.cardNumber}', ${!!card.stripePaymentMethodId})" 
+                                ${!card.stripePaymentMethodId ? 'style="background: #dc3545;"' : ''}>
+                            ${card.stripePaymentMethodId ? '💳 Pay with this card' : '⚠️ Cannot use (old format)'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function payWithSavedCard(cardId, cardName, cardNumber, hasStripeIntegration) {
+            if (!authToken) {
+                showResult('savedCardResult', '❌ Please login first', 'error');
+                return;
+            }
+
+            if (!hasStripeIntegration) {
+                showResult('savedCardResult', `⚠️ This card (${cardNumber}) was saved using the old method and cannot be used for payments.\n\nPlease save a new card using the payment process above with "Save card" checked.`, 'warning');
+                return;
+            }
+
+            const amount = document.getElementById(`amount_${cardId}`).value;
+
+            try {
+                console.log(`🔍 Attempting payment with saved card: ${cardId}`);
+                
+                const response = await fetch(`${API_BASE}/api/payments/pay-with-saved-card`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        cardId: cardId,
+                        amount: parseFloat(amount),
+                        currency: 'lkr'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.requiresAction) {
+                        showResult('savedCardResult', `🔐 Payment requires additional authentication\nClient Secret: ${data.clientSecret}`, 'info');
+                        
+                        // Handle 3D Secure if needed
+                        const {error: confirmError, paymentIntent} = await stripe.confirmCardPayment(data.clientSecret);
+                        
+                        if (confirmError) {
+                            showResult('savedCardResult', `❌ Authentication failed: ${confirmError.message}`, 'error');
+                        } else {
+                            showResult('savedCardResult', `✅ Payment successful after authentication!\nPayment ID: ${paymentIntent.id}\nAmount: ${data.amount} ${data.currency.toUpperCase()}\nCard: ${cardName} (${cardNumber})`, 'success');
+                        }
+                    } else {
+                        showResult('savedCardResult', `✅ Payment successful with saved card!\nPayment ID: ${data.paymentIntent.id}\nAmount: ${data.paymentIntent.amount} ${data.paymentIntent.currency.toUpperCase()}\nCard: ${cardName} (${cardNumber})`, 'success');
+                    }
+                } else {
+                    let errorMessage = `❌ Payment failed: ${data.message}`;
+                    
+                    if (data.errorCode === 'OLD_CARD_FORMAT') {
+                        errorMessage += `\n\n💡 This card was saved using the old method. ${data.recommendation}`;
+                    } else if (data.recommendation) {
+                        errorMessage += `\n\n💡 ${data.recommendation}`;
+                    }
+                    
+                    showResult('savedCardResult', errorMessage, 'error');
+                }
+            } catch (error) {
+                showResult('savedCardResult', `❌ Payment error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkCardDatabase() {
+            if (!authToken) {
+                showResult('savedCardResult', '❌ Please login first', 'error');
+                return;
+            }
+
+            showResult('savedCardResult', '🔍 Checking card database status...', 'info');
+
+            try {
+                // This would need a backend endpoint that runs the check script
+                showResult('savedCardResult', `🔧 To check the full database status, run this command in your backend terminal:
+
+node check-saved-cards.js
+
+This will show:
+• Which cards have proper Stripe integration
+• Which cards were saved using the old method
+• Detailed analysis of all saved cards
+
+Cards saved through the payment process above will have ✅ proper Stripe integration.
+Cards saved through the /api/cards endpoint will show ❌ and cannot be used for payments.`, 'info');
+                
+            } catch (error) {
+                showResult('savedCardResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStripe();
+            console.log('🚀 Fixed Card Saving Test loaded');
+            console.log('💡 This version properly demonstrates how to save cards with Stripe integration');
+        });
+    </script>
+</body>
+</html>

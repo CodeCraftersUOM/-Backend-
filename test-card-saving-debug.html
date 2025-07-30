@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💾 Card Saving Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .success-section { border-color: #28a745; background-color: #f8fff9; }
+        .test-section { border-color: #17a2b8; background-color: #f0fdff; }
+        input, button, select { margin: 5px 0; padding: 10px; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-info { background: #17a2b8; }
+        .btn-info:hover { background: #138496; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        .warning { color: #856404; }
+        .stripe-card { padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin: 5px 0; }
+        .card-item { border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; border-radius: 5px; background: #f8f9fa; }
+        .debug-info { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    </style>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>💾 Card Saving Test - Debug Mode</h1>
+    
+    <div class="test-section">
+        <h3>🎯 Testing Card Save Functionality</h3>
+        <p>This page will help you debug why cards aren't being saved when you check "Save card for future payments"</p>
+    </div>
+
+    <!-- Login Section -->
+    <div class="section">
+        <h2>1. 🔐 Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email" value="a@gmail.com">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- Payment with Card Saving -->
+    <div class="section success-section">
+        <h2>2. 💳 Test Payment with Card Saving</h2>
+        <p><strong>This will test the exact flow from your frontend:</strong></p>
+        <input type="text" id="cardholderName" placeholder="Cardholder Name" value="Test User">
+        <div class="stripe-card" id="card-number"></div>
+        <div style="display: flex; gap: 10px;">
+            <div class="stripe-card" id="card-expiry" style="flex: 1;"></div>
+            <div class="stripe-card" id="card-cvc" style="flex: 1;"></div>
+        </div>
+        <label>
+            <input type="checkbox" id="saveCard" checked> 💾 Save card for future payments
+        </label>
+        <button class="btn-success" onclick="testCardSaving()">Pay Rs. 100 & Test Card Saving</button>
+        <div id="paymentResult"></div>
+        <div id="debugOutput" class="debug-info" style="display: none;"></div>
+    </div>
+
+    <!-- Saved Cards Section -->
+    <div class="section">
+        <h2>3. 💾 Saved Cards</h2>
+        <button onclick="fetchSavedCards()">Refresh Saved Cards</button>
+        <div id="savedCardsResult"></div>
+    </div>
+
+    <!-- Debug Section -->
+    <div class="section">
+        <h2>4. 🔍 Debug Information</h2>
+        <button onclick="getDebugInfo()">Get System Debug Info</button>
+        <div id="systemDebug"></div>
+    </div>
+
+    <!-- Manual Database Check -->
+    <div class="section">
+        <h2>5. 🗄️ Database Check</h2>
+        <button onclick="checkDatabase()">Check Database Directly</button>
+        <div id="databaseResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:2000';
+        
+        // Initialize Stripe
+        const stripe = Stripe('pk_test_your_stripe_publishable_key_here'); // Replace with your actual key
+        const elements = stripe.elements();
+        
+        // Create card elements
+        const cardNumber = elements.create('cardNumber');
+        const cardExpiry = elements.create('cardExpiry');
+        const cardCvc = elements.create('cardCvc');
+        
+        // Mount elements
+        cardNumber.mount('#card-number');
+        cardExpiry.mount('#card-expiry');
+        cardCvc.mount('#card-cvc');
+
+        function logDebug(message, data = null) {
+            const debugDiv = document.getElementById('debugOutput');
+            debugDiv.style.display = 'block';
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugDiv.innerHTML += logEntry + '\n';
+            if (data) {
+                debugDiv.innerHTML += JSON.stringify(data, null, 2) + '\n\n';
+            }
+            console.log(logEntry, data);
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            logDebug('Attempting login...', { email });
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                logDebug('Login response:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Login successful: ${data.user.email}</div>`;
+                    
+                    // Automatically fetch saved cards after login
+                    setTimeout(fetchSavedCards, 1000);
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                logDebug('Login error:', error.message);
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function testCardSaving() {
+            const resultDiv = document.getElementById('paymentResult');
+            const cardholderName = document.getElementById('cardholderName').value;
+            const saveCard = document.getElementById('saveCard').checked;
+            
+            // Clear previous debug output
+            document.getElementById('debugOutput').innerHTML = '';
+            
+            logDebug('Starting payment with card saving test...', {
+                cardholderName,
+                saveCard,
+                testAmount: 100
+            });
+            
+            try {
+                resultDiv.innerHTML = '<div class="info">⏳ Step 1: Creating payment intent...</div>';
+                
+                // Step 1: Create payment intent
+                logDebug('Creating payment intent...');
+                const intentResponse = await fetch(`${API_BASE}/api/createPaymentIntent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        amount: 100, // Small test amount
+                        currency: 'lkr',
+                        saveCard: saveCard
+                    })
+                });
+                
+                const intentData = await intentResponse.json();
+                logDebug('Payment intent response:', intentData);
+                
+                if (!intentResponse.ok) {
+                    throw new Error(intentData.message || 'Failed to create payment intent');
+                }
+                
+                const { clientSecret, paymentIntentId } = intentData;
+                
+                resultDiv.innerHTML = '<div class="info">⏳ Step 2: Processing payment with Stripe...</div>';
+                
+                // Step 2: Confirm payment with Stripe
+                logDebug('Confirming payment with Stripe...', { paymentIntentId });
+                const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardNumber,
+                        billing_details: {
+                            name: cardholderName,
+                        },
+                    }
+                });
+                
+                if (error) {
+                    logDebug('Stripe payment error:', error);
+                    resultDiv.innerHTML = `<div class="error">❌ Payment failed: ${error.message}</div>`;
+                    return;
+                }
+                
+                logDebug('Stripe payment successful:', paymentIntent);
+                
+                if (paymentIntent.status === 'succeeded') {
+                    resultDiv.innerHTML = '<div class="info">⏳ Step 3: Confirming payment and saving card...</div>';
+                    
+                    // Step 3: Confirm payment on backend and save card
+                    const confirmData = {
+                        paymentIntentId: paymentIntent.id,
+                        paymentMethodId: paymentIntent.payment_method,
+                        saveCard: saveCard,
+                        cardDetails: {
+                            cardHolderName: cardholderName
+                        }
+                    };
+                    
+                    logDebug('Sending confirmPayment request:', confirmData);
+                    
+                    const confirmResponse = await fetch(`${API_BASE}/api/confirmPayment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(confirmData)
+                    });
+                    
+                    const confirmResponseData = await confirmResponse.json();
+                    logDebug('confirmPayment response:', confirmResponseData);
+                    
+                    if (confirmResponse.ok) {
+                        let message = `<div class="success">✅ Payment successful! Amount: Rs. ${paymentIntent.amount / 100}</div>`;
+                        
+                        if (saveCard) {
+                            if (confirmResponseData.savedCard) {
+                                message += `<div class="success">💾 Card saved successfully!</div>`;
+                                message += `<div class="info">Card ID: ${confirmResponseData.savedCard.id}</div>`;
+                                logDebug('Card saved successfully:', confirmResponseData.savedCard);
+                                
+                                // Refresh saved cards
+                                setTimeout(fetchSavedCards, 2000);
+                            } else {
+                                message += `<div class="warning">⚠️ Payment successful but card was not saved!</div>`;
+                                logDebug('WARNING: Card was not saved despite saveCard being true');
+                            }
+                        }
+                        
+                        resultDiv.innerHTML = message;
+                    } else {
+                        logDebug('confirmPayment failed:', confirmResponseData);
+                        resultDiv.innerHTML = `<div class="warning">⚠️ Payment successful but confirmation failed: ${confirmResponseData.message}</div>`;
+                    }
+                }
+                
+            } catch (error) {
+                logDebug('Test error:', error.message);
+                resultDiv.innerHTML = `<div class="error">❌ Test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchSavedCards() {
+            const resultDiv = document.getElementById('savedCardsResult');
+            
+            logDebug('Fetching saved cards...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/cards`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                logDebug('Saved cards response:', data);
+                
+                if (response.ok) {
+                    if (data.cards && data.cards.length > 0) {
+                        const cardsHtml = data.cards.map(card => 
+                            `<div class="card-item">
+                                💳 <strong>${card.cardHolderName}</strong><br>
+                                Card: ${card.cardNumber}<br>
+                                Expires: ${card.expiryDate}<br>
+                                <small>ID: ${card.id}</small><br>
+                                <small>Added: ${new Date(card.createdAt).toLocaleString()}</small>
+                            </div>`
+                        ).join('');
+                        
+                        resultDiv.innerHTML = `
+                            <div class="success">✅ Found ${data.cards.length} saved card(s):</div>
+                            ${cardsHtml}
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<div class="info">ℹ️ No saved cards found. Try saving a card first.</div>`;
+                    }
+                } else {
+                    logDebug('Fetch cards failed:', data);
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to get cards: ${data.message}</div>`;
+                }
+            } catch (error) {
+                logDebug('Fetch cards error:', error.message);
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function getDebugInfo() {
+            const resultDiv = document.getElementById('systemDebug');
+            
+            try {
+                // Check payment service health
+                const healthResponse = await fetch(`${API_BASE}/api/payments/health`, {
+                    credentials: 'include'
+                });
+                const healthData = await healthResponse.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">🔍 System Debug Information:</div>
+                    <div class="debug-info">
+                        <strong>Payment Service Status:</strong> ${healthData.message}<br>
+                        <strong>Stripe Configured:</strong> ${healthData.stripe.configured}<br>
+                        <strong>Test Mode:</strong> ${healthData.stripe.testMode}<br>
+                        <strong>Available Endpoints:</strong><br>
+                        - ${healthData.endpoints.createIntent}<br>
+                        - ${healthData.endpoints.confirm}<br>
+                        - GET /api/cards (for saved cards)<br>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Failed to get debug info: ${error.message}</div>`;
+            }
+        }
+
+        async function checkDatabase() {
+            const resultDiv = document.getElementById('databaseResult');
+            
+            try {
+                // This will check if cards are actually being saved in database
+                resultDiv.innerHTML = '<div class="info">🔍 Checking database for saved cards...</div>';
+                
+                const response = await fetch(`${API_BASE}/api/cards`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const cardCount = data.cards ? data.cards.length : 0;
+                    resultDiv.innerHTML = `
+                        <div class="info">📊 Database Check Results:</div>
+                        <div class="debug-info">
+                            Total saved cards in database: ${cardCount}<br>
+                            Response structure: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Database check failed: ${data.message}</div>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Database check error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-fetch cards on page load if user is logged in
+        window.addEventListener('load', function() {
+            setTimeout(fetchSavedCards, 1000);
+        });
+    </script>
+</body>
+</html>
