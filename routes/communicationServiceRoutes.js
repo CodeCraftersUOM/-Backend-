@@ -9,7 +9,7 @@ const {
 } = require("../controllers/communicationServiceController");
 
 // Create new service
-router.post("/", createService);
+router.post("/addCommunicationService", createService);
 
 // Get all services
 router.get("/", getAllServices);

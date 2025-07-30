@@ -9,7 +9,7 @@ const {
 } = require("../controllers/vehicleRepairServiceController");
 
 // Create new vehicle repair service
-router.post("/", createVehicleRepairService);
+router.post("/createVehicleRepairService", createVehicleRepairService);
 
 // Get all vehicle repair services
 router.get("/", getAllVehicleRepairServices);
