@@ -58,8 +58,13 @@ const accommodationServiceSchema = new mongoose.Schema(
     },
     starRating: {
       type: Number,
-      min: 1,
+      default: 0,
+      min: 0,
       max: 5,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
     },
     numberOfRooms: {
       type: Number,
@@ -128,16 +133,16 @@ const accommodationServiceSchema = new mongoose.Schema(
       gym: { type: Boolean, default: false },
       spa: { type: Boolean, default: false },
       restaurantOnSite: { type: Boolean, default: false },
-      barLounge: { type: Boolean, default: false }, // Added
-      roomService: { type: Boolean, default: false }, // Added
-      laundryService: { type: Boolean, default: false }, // Added
-      conciergeService: { type: Boolean, default: false }, // Added
-      airportTransfer: { type: Boolean, default: false }, // Changed from airportShuttle
+      barLounge: { type: Boolean, default: false },
+      roomService: { type: Boolean, default: false },
+      laundryService: { type: Boolean, default: false },
+      conciergeService: { type: Boolean, default: false },
+      airportTransfer: { type: Boolean, default: false },
       petFriendly: { type: Boolean, default: false },
-      eventFacilities: { type: Boolean, default: false }, // Added
+      eventFacilities: { type: Boolean, default: false },
       parkingAvailable: { type: Boolean, default: false },
       wifi: { type: Boolean, default: false },
-      familyAreaKidsFriendly: { type: Boolean, default: false }, // Added
+      familyAreaKidsFriendly: { type: Boolean, default: false },
       wheelchairAccessible: { type: Boolean, default: false },
     },
   },
