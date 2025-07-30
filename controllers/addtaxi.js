@@ -154,6 +154,9 @@ const getTaxiDriverById = async (req, res) => {
     if (!driver) {
       return res.status(404).json({ success: false, error: 'Taxi driver not found' });
     }
+    
+    console.log('Taxi driver data fetched by ID:', driver);
+    
     res.status(200).json({ success: true, data: driver });
   } catch (error) {
     handleError(res, error, 'fetching taxi driver by ID');

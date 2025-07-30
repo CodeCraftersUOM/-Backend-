@@ -17,7 +17,7 @@ router.post('/addTAxi', createTaxiDriver);
 // Frontend is calling this endpoint - adding it
 router.post('/addTaxiDriver', createTaxiDriver);
 
-// New routes matching accommodation pattern
+// New routes matching your guide pattern
 router.post('/addTaxi', createTaxiService);
 router.get('/taxis', getTaxiDrivers);
 router.get('/taxi/:id', getTaxiDriverById);
