@@ -1,4 +1,4 @@
-const TaxiDriver = require('../models/taxiModel');
+const TaxiDriver = require("../models/taxiModel");
 
 const createTaxiDriver = async (req, res) => {
   try {
@@ -10,11 +10,11 @@ const createTaxiDriver = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Taxi driver registered successfully',
+      message: "Taxi driver registered successfully",
       data: savedDriver,
     });
   } catch (error) {
-    console.error('Error creating taxi driver:', error);
+    console.error("Error creating taxi driver:", error);
 
     // Handle duplicate key error
     if (error.code === 11000) {
@@ -28,9 +28,25 @@ const createTaxiDriver = async (req, res) => {
     // Handle all other errors
     res.status(500).json({
       success: false,
-      error: 'Server error. Could not register taxi driver.',
+      error: "Server error. Could not register taxi driver.",
     });
   }
 };
 
-module.exports = { createTaxiDriver };
+const getTaxiDrivers = async (req, res) => {
+  try {
+    const taxiDrivers = await TaxiDriver.find(); // Fetch all taxi drivers
+    res.status(200).json({
+      success: true,
+      data: taxiDrivers,
+    });
+  } catch (error) {
+    console.error("Error fetching taxi drivers:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error. Could not fetch taxi drivers.",
+    });
+  }
+};
+
+module.exports = { createTaxiDriver, getTaxiDrivers };

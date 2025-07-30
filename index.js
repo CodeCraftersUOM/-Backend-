@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-
+const authenticateMobile = require("./middleware/authenticateMobile"); // Import the new middleware
 const app = express();
 
 // Middleware
