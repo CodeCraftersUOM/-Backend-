@@ -91,19 +91,19 @@ app.use("/api/old", loginRouter); // Mount on /api/old to avoid conflict
 
 // ✅ Additional routes from original index.js
 app.use("/api", require("./routes/authenticationRoute"));
-app.use("/api", require("./routes/guideRoutes"));
-app.use("/api", require("./routes/communicationServiceRoutes"));
-app.use("/api", require("./routes/vehicleRepairServiceRoutes"));
-app.use("/api", require("./routes/resturentRoutes"));
-app.use("/api", require("./routes/healthRoutes"));
-app.use("/api", require("./routes/houeskeepingRoutes"));
-app.use("/api", require("./routes/taxiRoutes"));
-app.use("/api", require("./routes/otherRoutes"));
-app.use("/api", require("./routes/accommodationRoutes"));
-app.use("/api", require("./routes/cardRoutes"));
-app.use("/api", require("./routes/bookingRoutes"));
-app.use("/api", require("./routes/notificationRoutes"));
-app.use("/api", require("./routes/appNotificationRoutes"));
+app.use("/api/guides", require("./routes/guideRoutes"));
+app.use("/api/communication", require("./routes/communicationServiceRoutes"));
+app.use("/api/vehiclerepair", require("./routes/vehicleRepairServiceRoutes"));
+app.use("/api/resturent", require("./routes/resturentRoutes"));
+app.use("/api/health", require("./routes/healthRoutes"));
+app.use("/api/houeskeeping", require("./routes/houeskeepingRoutes"));
+app.use("/api/taxi", require("./routes/taxiRoutes"));
+app.use("/api/other", require("./routes/otherRoutes"));
+app.use("/api/accommodation", require("./routes/accommodationRoutes"));
+app.use("/api/card", require("./routes/cardRoutes"));
+app.use("/api/booking", require("./routes/bookingRoutes"));
+app.use("/api/notification", require("./routes/notificationRoutes"));
+app.use("/api/appNotification", require("./routes/appNotificationRoutes"));
 
 // Start the server
 const PORT = 2000;

@@ -123,6 +123,7 @@ const createTaxiService = async (req, res) => {
 };
 
 const getTaxiDrivers = async (req, res) => {
+  console.log('Hi');
   try {
     const { page = 1, limit = 10 } = req.query;
     const filter = buildFilter(req.query);
