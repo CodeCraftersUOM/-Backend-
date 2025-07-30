@@ -140,8 +140,13 @@ exports.updateBookingStatus = async (req, res) => {
       ).toLocaleDateString()} to ${new Date(
         booking.checkOutDate
       ).toLocaleDateString()} has been confirmed.`;
+      let paymentLink = null; // Initialize paymentLink
 
-      if (status === "rejected") {
+      if (status === "confirmed") {
+        // Generate payment link for confirmed bookings
+        // IMPORTANT: Replace with your actual payment gateway URL and parameters
+        paymentLink = `http://your-payment-gateway.com/pay?bookingId=${booking._id}&amount=${booking.totalPrice}&customerEmail=${booking.customerEmail}`;
+      } else if (status === "rejected") {
         notificationType = "booking_rejected";
         title = "Booking Rejected";
         message = `Unfortunately, your booking for ${
@@ -151,8 +156,7 @@ exports.updateBookingStatus = async (req, res) => {
         ).toLocaleDateString()} to ${new Date(
           booking.checkOutDate
         ).toLocaleDateString()} has been rejected.`;
-      }
-      if (status === "cancelled") {
+      } else if (status === "cancelled") {
         notificationType = "booking_cancelled";
         title = "Booking Cancelled";
         message = `Your booking for ${
@@ -162,8 +166,7 @@ exports.updateBookingStatus = async (req, res) => {
         ).toLocaleDateString()} to ${new Date(
           booking.checkOutDate
         ).toLocaleDateString()} has been cancelled.`;
-      }
-      if (status === "completed") {
+      } else if (status === "completed") {
         notificationType = "booking_completed";
         title = "Booking Completed";
         message = `Your stay at ${booking.accommodationName} has been completed. Thank you for choosing our service!`;
@@ -176,6 +179,7 @@ exports.updateBookingStatus = async (req, res) => {
         message: message,
         type: notificationType,
         bookingId: booking._id,
+        paymentLink: paymentLink, // Include the payment link
       });
       await newNotification.save();
       console.log("Notification saved to DB:", newNotification);

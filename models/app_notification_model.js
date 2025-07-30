@@ -40,6 +40,11 @@ const notificationSchema = new mongoose.Schema(
       ref: "Booking",
       required: false,
     },
+    paymentLink: {
+      // Add this new field
+      type: String,
+      required: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
