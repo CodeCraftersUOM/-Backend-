@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { createCardDetail } = require("../controllers/addcard");
+const { createCardDetail } = require("../controllers/addcard"); // Ensure correct path
 
-// Update the route to match frontend URL
-router.post("/cards", createCardDetail);
+// This route will now receive the Stripe Payment Method ID
+router.post("/save-stripe-payment-method", createCardDetail); // Updated route name
 
 module.exports = router;

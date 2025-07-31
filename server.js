@@ -7,7 +7,9 @@ const mongoose = require("mongoose");
 const router = require("./routes/router");
 const controller = require("./controllers/controller");
 
-app.use(cors());
+app.use(cors(
+  AllowedOrigins = ["*"]
+));
 app.use(express.json());
 
 const uri =

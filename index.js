@@ -8,7 +8,10 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:3000", // Adjust if needed
+    origin: "*", // **CORRECTION 1: Allows requests from any origin for development**
+    // IMPORTANT: For production, change '*' to the specific URL of your Flutter web app,
+    // e.g., 'https://your-app-domain.com' or 'http://localhost:59761' during local dev
+    // if you know the exact port your Flutter web app is running on.
     credentials: true,
   })
 );
@@ -89,6 +92,10 @@ process.on('SIGINT', async () => {
 const loginRouter = require("./routes/router"); // handles login/signup (username-based)
 app.use("/api/old", loginRouter); // Mount on /api/old to avoid conflict
 
+// **CORRECTION 2: Mount profileRoutes here as well, if it's not already mounted elsewhere.**
+// Assuming you have a profileRoutes.js that handles /api/profile endpoints
+app.use("/api/profile", require("./routes/profileRoutes")); // <--- Add this line if missing/not explicit
+
 // ✅ Additional routes from original index.js
 app.use("/api", require("./routes/authenticationRoute"));
 app.use("/api/guides", require("./routes/guideRoutes"));
@@ -104,6 +111,7 @@ app.use("/api/card", require("./routes/cardRoutes"));
 app.use("/api/booking", require("./routes/bookingRoutes"));
 app.use("/api/notification", require("./routes/notificationRoutes"));
 app.use("/api/appNotification", require("./routes/appNotificationRoutes"));
+
 
 // Start the server
 const PORT = 2000;
